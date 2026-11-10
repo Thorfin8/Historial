@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Historial de salud · Lumbar de Acero</title>
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0E2652;--azul:#3A7AC4;--hielo:#EEF4FB;--linea:#D9E3F0;--texto:#1F2A3D;--gris:#5B6B82;--fondo:#F6F9FD;--blanco:#fff;--error:#C0392B;}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{font-family:Poppins,system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--fondo);color:var(--texto);font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%;}
+.cab{background:var(--navy);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:5;}
+.cab img{width:34px;height:auto;}
+.cab .t1{font-size:11px;letter-spacing:2px;color:#9CC3EE;font-weight:600;margin:0;}
+.cab .t2{font-size:16px;font-weight:700;margin:0;line-height:1.2;}
+.barra{height:5px;background:#24406f;}
+.barra i{display:block;height:100%;width:0;background:#6FA8E6;transition:width .3s;}
+main{max-width:640px;margin:0 auto;padding:20px 16px 120px;}
+h1{font-size:23px;line-height:1.2;color:var(--navy);margin:4px 0 6px;}
+.paso{font-size:12px;font-weight:600;letter-spacing:1px;color:var(--azul);text-transform:uppercase;margin:0;}
+.intro{color:var(--gris);margin:0 0 18px;}
+.q{background:var(--blanco);border:1px solid var(--linea);border-radius:14px;padding:14px 14px 12px;margin:0 0 12px;}
+.q.err{border-color:var(--error);box-shadow:0 0 0 2px rgba(192,57,43,.12);}
+.q label.l{display:block;font-weight:600;color:var(--navy);margin:0 0 8px;font-size:15.5px;}
+.q .ayuda{display:block;font-weight:400;color:var(--gris);font-size:13.5px;margin-top:2px;}
+.q .oblig{color:var(--azul);}
+.q .msg{display:none;color:var(--error);font-size:13px;margin-top:6px;}
+.q.err .msg{display:block;}
+input[type=text],input[type=email],input[type=tel],input[type=number],textarea{width:100%;font:inherit;font-size:16px;padding:11px 12px;border:1.5px solid var(--linea);border-radius:10px;background:#fff;color:var(--texto);}
+textarea{min-height:92px;resize:vertical;}
+input:focus,textarea:focus{outline:none;border-color:var(--azul);}
+.ops{display:flex;flex-direction:column;gap:7px;}
+.op{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--linea);border-radius:10px;cursor:pointer;background:#fff;}
+.op input{width:20px;height:20px;accent-color:var(--azul);flex:none;margin:0;}
+.op.on{border-color:var(--azul);background:var(--hielo);}
+.escala{display:flex;flex-wrap:wrap;gap:6px;}
+.escala button{flex:1 0 40px;min-width:40px;height:44px;border:1.5px solid var(--linea);border-radius:10px;background:#fff;font:inherit;font-weight:600;color:var(--navy);cursor:pointer;}
+.escala button.on{background:var(--azul);border-color:var(--azul);color:#fff;}
+.extremos{display:flex;justify-content:space-between;font-size:12.5px;color:var(--gris);margin-top:5px;}
+.caja{background:var(--hielo);border-left:4px solid var(--azul);border-radius:10px;padding:12px 14px;margin:0 0 14px;font-size:15px;}
+.caja p{margin:0 0 6px;}.caja p:last-child{margin:0;}
+.pie{position:fixed;left:0;right:0;bottom:0;background:rgba(246,249,253,.97);border-top:1px solid var(--linea);padding:12px 16px calc(12px + env(safe-area-inset-bottom));}
+.pie .in{max-width:640px;margin:0 auto;display:flex;gap:10px;}
+.btn{font:inherit;font-weight:600;font-size:16px;border-radius:12px;padding:13px 16px;border:0;cursor:pointer;}
+.btn.pri{background:var(--azul);color:#fff;flex:1;}
+.btn.sec{background:#fff;color:var(--navy);border:1.5px solid var(--linea);}
+.btn.wa{background:#1FA855;color:#fff;width:100%;margin:6px 0;}
+.btn.lnk{background:none;color:var(--gris);text-decoration:underline;padding:8px 0;font-weight:500;font-size:14px;}
+.btn[disabled]{opacity:.6;}
+.resumen dt{font-size:13px;color:var(--gris);margin-top:8px;}
+.resumen dd{margin:0;font-weight:500;}
+.ok{font-size:44px;margin:10px 0 0;}
+.oculto{display:none !important;}
+a{color:var(--azul);}
+</style>
+</head>
+<body>
+<header class="cab">
+  <img src="logo.png" alt="">
+  <div><p class="t1">VICTOR SANZ FISIO</p><p class="t2">Historial de salud · Lumbar de Acero</p></div>
+</header>
+<div class="barra"><i id="barra"></i></div>
+<main id="main"></main>
+<div class="pie" id="pie"><div class="in">
+  <button class="btn sec" id="atras" type="button">Atrás</button>
+  <button class="btn pri" id="siguiente" type="button">Empezar</button>
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+/* ===== Ajustes ===== */
+// Número de WhatsApp de Victor con prefijo, sin + ni espacios (ej. 34600123456). Vacío = no se muestra el botón directo.
+const WHATSAPP_VICTOR = '';
+const CLAVE = 'vsf_historial_v1';
+
+/* ===== Preguntas ===== */
+const S = (id,t,o={}) => Object.assign({id,t,tipo:'texto'},o);
+const SINO = ['Sí','No'];
+const PASOS = [
+ {titulo:'Bienvenido', bienvenida:true},
+ {titulo:'Tus datos', intro:'Para la factura y para poder escribirte.', qs:[
+   S('nombre','Nombre y apellidos',{req:1}),
+   S('dni','DNI o NIE',{req:1}),
+   S('email','Correo electrónico',{tipo:'email',req:1}),
+   S('telefono','Teléfono',{tipo:'tel',req:1,ph:'Ejemplo: 600 123 456'}),
+   S('localidad','Localidad',{req:1}),
+   S('edad','Edad',{tipo:'num',req:1}),
+   S('altura','Altura en cm',{tipo:'num',req:1}),
+   S('peso','Peso en kg',{tipo:'num',req:1}),
+ ]},
+ {titulo:'Consentimiento', intro:'Es la política de privacidad que te mandé por email. Marca cada casilla para aceptarla.', qs:[
+   S('c_politica','He leído la Política de Privacidad y Exoneración de Responsabilidad, la entiendo y la acepto en su totalidad.',{tipo:'acepto',req:1,op:'Acepto'}),
+   S('c_salud','Doy mi consentimiento explícito para que Víctor Sanz Yagüe trate mis datos de salud con el único fin de realizar mi valoración y el seguimiento del Programa Lumbar de Acero (art. 9 RGPD).',{tipo:'acepto',req:1,op:'Consiento'}),
+   S('c_desistimiento','Pido que el programa empiece ya, dentro del plazo de 14 días de desistimiento, y entiendo que, una vez iniciado el servicio, pierdo ese derecho (art. 103 del RDL 1/2007).',{tipo:'acepto',req:1,op:'Entiendo y acepto'}),
+   S('c_mayor','Soy mayor de edad.',{tipo:'acepto',req:1,op:'Sí'}),
+   S('c_grabar','¿Aceptas que algunas sesiones se graben para que puedas revisarlas o para el archivo del fisioterapeuta?',{tipo:'radio',op:SINO,req:1,ayuda:'Puedes decir que no y participar igual.'}),
+   S('c_redes','¿Aceptas que se usen fragmentos de las sesiones o tu testimonio en redes sociales de Victor Sanz Fisio?',{tipo:'radio',op:SINO,req:1,ayuda:'Es independiente del programa y puedes retirarlo cuando quieras.'}),
+   S('c_firma','Firma: escribe tu nombre completo',{req:1,ayuda:'Junto con la fecha y la hora del envío, vale como tu firma de este consentimiento.'}),
+ ]},
+ {titulo:'Tu salud en general', qs:[
+   S('peso_cambio','¿Ha cambiado tu peso en los últimos meses sin que lo buscaras?',{tipo:'radio',op:['No','Sí, he bajado','Sí, he subido']}),
+   S('salud','¿Cómo valoras tu salud en general?',{tipo:'escala',min:1,max:5,ext:['1 = muy mala','5 = muy buena']}),
+   S('diagnosticos','¿Te han diagnosticado alguna de estas?',{tipo:'check',op:['Tensión alta','Diabetes','Colesterol alto','Problemas de tiroides','Osteoporosis','Artrosis','Enfermedad reumática o autoinmune','Problemas de corazón','Asma o problemas respiratorios','Ansiedad o depresión','Problemas digestivos','Cáncer (ahora o en el pasado)','Ninguna','Otra']}),
+   S('diagnostico_otra','Si has marcado Otra, ¿cuál?',{si:a=>(a.diagnosticos||[]).includes('Otra')}),
+   S('medicacion','¿Qué medicación tomas ahora?',{tipo:'area',ayuda:'Nombre y dosis si lo sabes. Incluye también corticoides, inyecciones o tratamientos de larga duración.'}),
+   S('cirugias','¿Has tenido alguna cirugía o lesión importante a lo largo de tu vida? ¿Cuál y cuándo?',{tipo:'area'}),
+   S('golpe','¿Has tenido algún golpe o caída fuerte en los últimos meses?',{tipo:'radio',op:SINO}),
+   S('enfermo','¿Has estado enfermo hace poco, con fiebre o alguna infección?',{tipo:'radio',op:SINO}),
+   S('otras_zonas','Además de la espalda, ¿te duele o te limita alguna otra zona del cuerpo? ¿Cuál?'),
+ ]},
+ {titulo:'Sueño y respiración', qs:[
+   S('sueno','¿Cómo es la calidad de tu sueño?',{tipo:'escala',min:0,max:10,ext:['0 = fatal','10 = perfecta']}),
+   S('dormirse','¿Te cuesta quedarte dormido?',{tipo:'radio',op:['Nunca','A veces','A menudo']}),
+   S('descansado','¿Te levantas descansado?',{tipo:'radio',op:['Casi siempre','A veces','Casi nunca']}),
+   S('postura','¿En qué postura duermes sobre todo?',{tipo:'radio',op:['Boca arriba','De lado','Boca abajo','Voy cambiando']}),
+   S('ronquidos','¿Roncas o te han dicho que dejas de respirar mientras duermes?',{tipo:'radio',op:['No','Ronco','Me han dicho que dejo de respirar','No lo sé']}),
+   S('respiracion','¿Respiras más por la nariz o por la boca?',{tipo:'radio',op:['Nariz','Boca','No lo sé']}),
+   S('aire','¿Sientes a menudo que no llenas los pulmones o que te falta el aire?',{tipo:'radio',op:SINO}),
+ ]},
+ {titulo:'Digestión, suelo pélvico y energía', qs:[
+   S('digestivo','¿Tienes a menudo alguna de estas?',{tipo:'check',op:['Hinchazón','Estreñimiento','Acidez o reflujo','Ninguna']}),
+   S('orina','¿Se te escapa algo de orina al toser, saltar o hacer esfuerzos?',{tipo:'radio',op:['Nunca','A veces','A menudo'],ayuda:'El suelo pélvico forma parte de tu centro, igual que el abdomen y la espalda.'}),
+   S('embarazos','Si eres mujer: ¿has tenido embarazos o partos? ¿Cuántos?'),
+   S('cambio_orinar','¿Has notado algún cambio al orinar o al ir de vientre, o menos sensibilidad en la zona íntima?',{tipo:'radio',op:SINO}),
+   S('energia','¿Cómo es tu nivel de energía en un día normal?',{tipo:'escala',min:0,max:10,ext:['0 = sin energía','10 = a tope']}),
+   S('estres','¿Cómo es tu nivel de estrés en un día normal?',{tipo:'escala',min:0,max:10,ext:['0 = nada','10 = máximo']}),
+   S('piernas','¿Notas las piernas débiles o que te fallan, y cada vez más?',{tipo:'radio',op:SINO}),
+ ]},
+ {titulo:'Tu espalda y tus hábitos', qs:[
+   S('que_crees','Con tus palabras: ¿qué crees que le pasa a tu espalda?',{tipo:'area'}),
+   S('actividad','¿Cuántos días a la semana haces actividad física? ¿Cuál?'),
+   S('pasos','¿Cuántos pasos das al día más o menos?',{tipo:'radio',op:['Menos de 3.000','3.000-6.000','6.000-10.000','Más de 10.000','No lo sé']}),
+   S('pantalla','Horas de pantalla al día fuera del trabajo',{tipo:'num'}),
+   S('fumas','¿Fumas?',{tipo:'radio',op:['No','Sí','Lo he dejado']}),
+   S('alcohol','¿Cuánto alcohol tomas?',{tipo:'radio',op:['Nada','Alguna vez al mes','Fines de semana','Casi a diario']}),
+   S('agua','¿Cuánta agua bebes al día?',{tipo:'radio',op:['Menos de 1 litro','1-2 litros','Más de 2 litros']}),
+   S('alimentacion','¿Cómo valoras tu alimentación?',{tipo:'escala',min:1,max:5,ext:['1 = muy mejorable','5 = muy buena']}),
+ ]},
+ {titulo:'Tu plan', qs:[
+   S('tiempo','¿Cuánto tiempo puedes dedicar al día a tus ejercicios?',{tipo:'radio',op:['10-15 min','15-30 min','30-45 min','Más de 45 min']}),
+   S('material','¿Qué material tienes?',{tipo:'check',op:['Esterilla','Gomas elásticas','Mancuernas o pesas','Acceso a un gimnasio','Nada por ahora']}),
+   S('horario','¿En qué horario te vienen mejor las sesiones conmigo?',{tipo:'check',op:['Mañana','Mediodía','Tarde','Noche']}),
+   S('pruebas','¿Tienes pruebas de imagen o informes (resonancias, radiografías…)?',{tipo:'radio',op:['Sí, te los mando por WhatsApp','No tengo'],ayuda:'Si los tienes, mándamelos por WhatsApp junto con este historial.'}),
+   S('expectativas','¿Qué esperas conseguir con el programa?',{tipo:'area'}),
+   S('algo_mas','¿Hay algo más que quieras que sepa antes de la valoración?',{tipo:'area'}),
+ ]},
+ {titulo:'Cómo llegaste hasta aquí', intro:'Para saber qué funciona y mejorar. Menos de un minuto.', qs:[
+   S('donde','¿Dónde me conociste?',{tipo:'radio',req:1,op:['Instagram','YouTube','TikTok','Google','Me lo recomendó alguien','Escuela de espalda o gimnasio','Otro']}),
+   S('donde_otro','¿Dónde?',{si:a=>a.donde==='Otro'}),
+   S('quien','Si te lo recomendó alguien, ¿quién?',{si:a=>a.donde==='Me lo recomendó alguien'}),
+   S('siguiendo','¿Cuánto tiempo llevabas siguiéndome antes de apuntarte?',{tipo:'radio',op:['Menos de 1 mes','1-3 meses','3-6 meses','Más de 6 meses']}),
+   S('decidirte','¿Qué te hizo decidirte del todo?',{tipo:'radio',op:['Un vídeo o una publicación','Un testimonio de otro paciente','La llamada de valoración','Los mensajes conmigo','Una recomendación','Otro']}),
+   S('decidirte_otro','¿Qué fue?',{si:a=>a.decidirte==='Otro'}),
+   S('cual_video','Si fue un vídeo o una publicación, ¿recuerdas cuál?',{si:a=>a.decidirte==='Un vídeo o una publicación',ph:'De qué iba, o el título si lo recuerdas'}),
+   S('freno','¿Hubo algo que casi te frenara para apuntarte?',{tipo:'area'}),
+ ]},
+ {titulo:'Revisa y envía', final:true},
+];
+
+/* ===== Estado ===== */
+let A = {}, paso = 0, enviado = false;
+try { const g = JSON.parse(localStorage.getItem(CLAVE)||'null'); if (g) { A = g.A||{}; paso = Math.min(g.paso||0, PASOS.length-1); } } catch(e){}
+const guardar = () => { try { localStorage.setItem(CLAVE, JSON.stringify({A,paso})); } catch(e){} };
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const visible = q => !q.si || q.si(A);
+const vacio = v => v===undefined || v===null || v==='' || (Array.isArray(v)&&!v.length);
+
+/* ===== Pintar ===== */
+const $main = document.getElementById('main'), $sig = document.getElementById('siguiente'), $atr = document.getElementById('atras');
+function pintar(){
+  const P = PASOS[paso];
+  document.getElementById('barra').style.width = (paso/(PASOS.length-1)*100)+'%';
+  $atr.classList.toggle('oculto', paso===0);
+  document.getElementById('pie').classList.toggle('oculto', !!P.final);
+  $sig.textContent = paso===0 ? (Object.keys(A).length ? 'Seguir donde lo dejé' : 'Empezar') : 'Siguiente';
+  let h = '';
+  if (P.bienvenida) {
+    h = `<h1>Tu historial de salud</h1>
+    <p class="intro">Antes de tu valoración necesito conocerte bien. Te lleva unos 15 minutos.</p>
+    <div class="caja"><p><strong>Cómo funciona:</strong></p>
+    <p>1. Respondes por partes: datos, consentimiento, salud, hábitos y tu plan.</p>
+    <p>2. Al final se crea un PDF con tus respuestas y me lo mandas por WhatsApp con un toque.</p>
+    <p>3. Lo que escribes se guarda solo en tu móvil u ordenador: si lo dejas a medias, puedes seguir luego desde el mismo enlace.</p></div>
+    <p class="intro">Tus respuestas no se guardan en ninguna web: solo me llegan a mí, en el PDF que tú me envías.</p>
+    ${Object.keys(A).length?'<button class="btn lnk" type="button" id="reiniciar">Empezar de cero (borra lo que llevas)</button>':''}`;
+  } else if (P.final) {
+    h = pintarFinal();
+  } else {
+    h = `<p class="paso">Parte ${paso} de ${PASOS.length-2}</p><h1>${esc(P.titulo)}</h1>${P.intro?`<p class="intro">${esc(P.intro)}</p>`:''}`;
+    h += P.qs.filter(visible).map(pintarQ).join('');
+  }
+  $main.innerHTML = h;
+  enlazar();
+  window.scrollTo(0,0);
+}
+function pintarQ(q){
+  const v = A[q.id], id='q_'+q.id;
+  const etiqueta = `<label class="l" for="${id}">${esc(q.t)}${q.req?' <span class="oblig">*</span>':''}${q.ayuda?`<span class="ayuda">${esc(q.ayuda)}</span>`:''}</label>`;
+  let c='';
+  if (q.tipo==='texto'||q.tipo==='email'||q.tipo==='tel'||q.tipo==='num') {
+    const t = {texto:'text',email:'email',tel:'tel',num:'text'}[q.tipo];
+    const im = q.tipo==='num'?' inputmode="decimal"':(q.tipo==='tel'?' inputmode="tel"':'');
+    c = `<input type="${t}"${im} id="${id}" data-id="${q.id}" value="${esc(v)}" placeholder="${esc(q.ph||'')}" autocomplete="off">`;
+  } else if (q.tipo==='area') {
+    c = `<textarea id="${id}" data-id="${q.id}" placeholder="${esc(q.ph||'')}">${esc(v)}</textarea>`;
+  } else if (q.tipo==='radio'||q.tipo==='check'||q.tipo==='acepto') {
+    const ops = q.tipo==='acepto'?[q.op]:q.op, multi = q.tipo!=='radio';
+    c = `<div class="ops">`+ops.map((o,i)=>{
+      const on = q.tipo==='acepto' ? v===true : (multi ? (v||[]).includes(o) : v===o);
+      return `<label class="op${on?' on':''}"><input type="${multi?'checkbox':'radio'}" name="${id}" data-id="${q.id}" data-v="${esc(o)}" data-t="${q.tipo}"${on?' checked':''}>${esc(o)}</label>`;
+    }).join('')+`</div>`;
+  } else if (q.tipo==='escala') {
+    let b=''; for(let n=q.min;n<=q.max;n++) b+=`<button type="button" data-id="${q.id}" data-n="${n}" class="${v===n?'on':''}">${n}</button>`;
+    c = `<div class="escala">${b}</div><div class="extremos"><span>${esc(q.ext[0])}</span><span>${esc(q.ext[1])}</span></div>`;
+  }
+  return `<div class="q" id="b_${q.id}">${etiqueta}${c}<div class="msg">Esta respuesta hace falta para seguir.</div></div>`;
+}
+function enlazar(){
+  $main.querySelectorAll('input[type=text],input[type=email],input[type=tel],textarea').forEach(el=>el.addEventListener('input',()=>{A[el.dataset.id]=el.value.trim()===''?undefined:el.value; guardar(); quitarErr(el.dataset.id);}));
+  $main.querySelectorAll('.op input').forEach(el=>el.addEventListener('change',()=>{
+    const id=el.dataset.id, t=el.dataset.t, val=el.dataset.v;
+    if (t==='acepto') A[id]=el.checked||undefined;
+    else if (t==='radio') A[id]=val;
+    else { let arr=(A[id]||[]).filter(x=>x!==val); if(el.checked) arr.push(val);
+      if (el.checked && /^(Ninguna|Nada por ahora)$/.test(val)) arr=[val]; else if (el.checked) arr=arr.filter(x=>!/^(Ninguna|Nada por ahora)$/.test(x));
+      A[id]=arr.length?arr:undefined; }
+    guardar(); quitarErr(id);
+    const antes = JSON.stringify(PASOS[paso].qs.filter(visible).map(q=>q.id));
+    if (t!=='radio' || antes!==refVisibles) { refVisibles=antes; }
+    repintarConFoco();
+  }));
+  $main.querySelectorAll('.escala button').forEach(el=>el.addEventListener('click',()=>{A[el.dataset.id]=+el.dataset.n; guardar(); quitarErr(el.dataset.id); repintarConFoco();}));
+  const r=document.getElementById('reiniciar'); if(r) r.onclick=()=>{ if(confirm('¿Borrar todas tus respuestas y empezar de cero?')){A={};paso=0;guardar();pintar();} };
+  const f=document.getElementById('enviar'); if(f) f.onclick=enviar;
+  const d=document.getElementById('descargar'); if(d) d.onclick=()=>{ const {doc,nombre}=crearPDF(); doc.save(nombre); };
+  const e=document.getElementById('editar'); if(e) e.onclick=()=>{paso=1;guardar();pintar();};
+  const b=document.getElementById('borrar'); if(b) b.onclick=()=>{ if(confirm('¿Borrar tus respuestas de este dispositivo? Hazlo solo cuando ya me hayas enviado el PDF.')){A={};paso=0;enviado=false;try{localStorage.removeItem(CLAVE);}catch(e){} pintar();} };
+}
+let refVisibles='';
+function repintarConFoco(){ const y=window.scrollY; const P=PASOS[paso]; if(P.final) return;
+  $main.innerHTML = `<p class="paso">Parte ${paso} de ${PASOS.length-2}</p><h1>${esc(P.titulo)}</h1>${P.intro?`<p class="intro">${esc(P.intro)}</p>`:''}`+P.qs.filter(visible).map(pintarQ).join('');
+  enlazar(); window.scrollTo(0,y); }
+function quitarErr(id){ const b=document.getElementById('b_'+id); if(b) b.classList.remove('err'); }
+function validar(){
+  const P=PASOS[paso]; if(!P.qs) return true; let primero=null;
+  P.qs.filter(visible).forEach(q=>{ let mal = q.req && vacio(A[q.id]);
+    if(!mal && q.tipo==='email' && A[q.id] && !/^\S+@\S+\.\S+$/.test(A[q.id])) mal=true;
+    if(mal){ const b=document.getElementById('b_'+q.id); b.classList.add('err'); if(!primero) primero=b; } });
+  if(primero){ primero.scrollIntoView({behavior:'smooth',block:'center'}); return false; }
+  return true;
+}
+$sig.onclick=()=>{ if(!validar()) return; if(paso<PASOS.length-1){paso++;guardar();pintar();} };
+$atr.onclick=()=>{ if(paso>0){paso--;guardar();pintar();} };
+
+/* ===== Final ===== */
+function faltan(){ const f=[]; PASOS.forEach((P,i)=>(P.qs||[]).filter(visible).forEach(q=>{ if(q.req&&vacio(A[q.id])) f.push(i); })); return [...new Set(f)]; }
+function pintarFinal(){
+  const f=faltan();
+  if (f.length) return `<h1>Casi está</h1><p class="intro">Falta alguna respuesta obligatoria en: <strong>${f.map(i=>esc(PASOS[i].titulo)).join(', ')}</strong>.</p>
+    <button class="btn pri" style="width:100%" type="button" onclick="paso=${f[0]};guardar();pintar();">Ir a completarlo</button>`;
+  const puedeCompartir = !!(navigator.canShare && window.File && navigator.canShare({files:[new File(['x'],'x.pdf',{type:'application/pdf'})]}));
+  return `<p class="paso">Último paso</p><h1>${enviado?'¡Gracias!':'Envíamelo por WhatsApp'}</h1>
+  ${enviado?`<p class="ok">✅</p><p class="intro">Si ya me ha llegado el PDF por WhatsApp, está todo. Lo leo antes de tu valoración.</p>`:''}
+  <div class="caja">${puedeCompartir
+    ? `<p>Pulsa el botón verde. Se abrirá la opción de compartir: elige <strong>WhatsApp</strong> y después <strong>mi chat</strong>.</p>`
+    : `<p>Pulsa el botón verde: se descargará un PDF con tus respuestas.</p><p>Después abre <strong>WhatsApp</strong> (o WhatsApp Web en el ordenador), entra en mi chat, pulsa el clip 📎 → <strong>Documento</strong> y elige el PDF que se acaba de descargar.</p>`}
+  ${A.pruebas&&A.pruebas.startsWith('Sí')?'<p>Mándame también tus pruebas de imagen o informes por el mismo chat.</p>':''}</div>
+  <button class="btn wa" type="button" id="enviar">${puedeCompartir?'Enviar a Victor por WhatsApp':'Descargar el PDF para enviarlo'}</button>
+  ${!puedeCompartir&&WHATSAPP_VICTOR?`<a class="btn sec" style="display:block;text-align:center;text-decoration:none" href="https://wa.me/${WHATSAPP_VICTOR}" target="_blank" rel="noopener">Abrir mi chat de WhatsApp</a>`:''}
+  ${puedeCompartir?'<button class="btn lnk" type="button" id="descargar">O descargar el PDF</button><br>':''}
+  <button class="btn lnk" type="button" id="editar">Revisar o cambiar respuestas</button><br>
+  ${enviado?'<button class="btn lnk" type="button" id="borrar">Ya te lo he enviado: borrar mis respuestas de este dispositivo</button>':''}`;
+}
+async function enviar(){
+  const btn=document.getElementById('enviar'); btn.disabled=true;
+  try{
+    const {doc,nombre}=crearPDF();
+    const blob=doc.output('blob'), file=new File([blob],nombre,{type:'application/pdf'});
+    if (navigator.canShare && navigator.canShare({files:[file]})) {
+      try { await navigator.share({files:[file], title:'Mi historial de salud'}); enviado=true; }
+      catch(e){ if(e.name!=='AbortError'){ doc.save(nombre); enviado=true; } }
+    } else { doc.save(nombre); enviado=true; }
+  } catch(e){ alert('No se ha podido crear el PDF. Prueba de nuevo o escríbeme por WhatsApp.'); }
+  btn.disabled=false; pintar();
+}
+
+/* ===== PDF ===== */
+function texto(q){ const v=A[q.id];
+  if (vacio(v)) return '—';
+  if (q.tipo==='acepto') return '✓ '+q.op;
+  if (Array.isArray(v)) return v.join(', ');
+  if (q.tipo==='escala') return v+' (de '+q.min+' a '+q.max+'; '+q.ext[0]+')';
+  return String(v);
+}
+function crearPDF(){
+  const { jsPDF } = window.jspdf; const doc=new jsPDF({unit:'mm',format:'a4'});
+  const W=210, M=16, ancho=W-2*M, AZUL=[58,122,196], NAVY=[14,38,82], GRIS=[91,107,130];
+  const ahora=new Date(), fecha=ahora.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+ahora.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+  let y=0;
+  const limpio = s => String(s).replace(/[“”„]/g,'"').replace(/[‘’]/g,"'").replace(/[–]/g,'-').replace(/[^\u0000-ÿ€✓—…·¿¡]/g,'').replace('✓','[X]').replace(/—/g,'-').replace(/…/g,'...');
+  doc.setFillColor(...NAVY); doc.rect(0,0,W,30,'F');
+  doc.setTextColor(156,195,238); doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.text('VICTOR SANZ FISIO · LUMBAR DE ACERO',M,11);
+  doc.setTextColor(255,255,255); doc.setFontSize(18); doc.text('Historial de salud',M,20);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.text(limpio((A.nombre||'')+'   ·   Enviado el '+fecha),M,26);
+  y=40;
+  const salto = h => { if(y+h>280){ doc.addPage(); y=18; } };
+  PASOS.forEach(P=>{ if(!P.qs) return;
+    salto(16); doc.setFont('helvetica','bold'); doc.setFontSize(12.5); doc.setTextColor(...AZUL); doc.text(limpio(P.titulo.toUpperCase()),M,y); y+=2;
+    doc.setDrawColor(217,227,240); doc.line(M,y,W-M,y); y+=6;
+    P.qs.filter(visible).forEach(q=>{
+      const pl=doc.setFont('helvetica','normal').setFontSize(9).splitTextToSize(limpio(q.t),ancho);
+      const rl=doc.setFont('helvetica','bold').setFontSize(10.5).splitTextToSize(limpio(texto(q)),ancho);
+      salto(pl.length*4+rl.length*5+4);
+      doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...GRIS); doc.text(pl,M,y); y+=pl.length*4+0.5;
+      doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor(...NAVY); doc.text(rl,M,y); y+=rl.length*5+3;
+    });
+    y+=3;
+  });
+  salto(14); doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...GRIS);
+  doc.text(doc.splitTextToSize(limpio('Consentimiento aceptado electrónicamente por '+(A.c_firma||'')+' el '+fecha+'.'),ancho),M,y);
+  const n=doc.getNumberOfPages();
+  for(let i=1;i<=n;i++){ doc.setPage(i); doc.setFontSize(8); doc.setTextColor(138,151,171);
+    doc.text('Confidencial: contiene datos de salud. Solo para Victor Sanz Fisio.',M,290); doc.text(i+' / '+n,W-M,290,{align:'right'}); }
+  const base=(A.nombre||'paciente').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'');
+  const f=ahora.toISOString().slice(0,10);
+  return {doc, nombre:`Historial_${base}_${f}.pdf`};
+}
+pintar();
+</script>
+</body>
+</html>

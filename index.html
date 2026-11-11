@@ -94,12 +94,9 @@ const PASOS = [
    S('peso','Peso en kg',{tipo:'num',req:1}),
  ]},
  {titulo:'Consentimiento', intro:'Es la política de privacidad que te mandé por email. Marca cada casilla para aceptarla.', qs:[
-   S('c_politica','He leído la Política de Privacidad y Exoneración de Responsabilidad, la entiendo y la acepto en su totalidad.',{tipo:'acepto',req:1,op:'Acepto'}),
+   S('c_politica','He leído la Política de Privacidad y Exoneración de Responsabilidad (incluida la política de pagos y cancelaciones), la entiendo y la acepto en su totalidad.',{tipo:'acepto',req:1,op:'Acepto'}),
    S('c_salud','Doy mi consentimiento explícito para que Víctor Sanz Yagüe trate mis datos de salud con el único fin de realizar mi valoración y el seguimiento del Programa Lumbar de Acero (art. 9 RGPD).',{tipo:'acepto',req:1,op:'Consiento'}),
-   S('c_desistimiento','Pido que el programa empiece ya, dentro del plazo de 14 días de desistimiento, y entiendo que, una vez iniciado el servicio, pierdo ese derecho (art. 103 del RDL 1/2007).',{tipo:'acepto',req:1,op:'Entiendo y acepto'}),
    S('c_mayor','Soy mayor de edad.',{tipo:'acepto',req:1,op:'Sí'}),
-   S('c_grabar','¿Aceptas que algunas sesiones se graben para que puedas revisarlas o para el archivo del fisioterapeuta?',{tipo:'radio',op:SINO,req:1,ayuda:'Puedes decir que no y participar igual.'}),
-   S('c_redes','¿Aceptas que se usen fragmentos de las sesiones o tu testimonio en redes sociales de Victor Sanz Fisio?',{tipo:'radio',op:SINO,req:1,ayuda:'Es independiente del programa y puedes retirarlo cuando quieras.'}),
    S('c_firma','Firma: escribe tu nombre completo',{req:1,ayuda:'Junto con la fecha y la hora del envío, vale como tu firma de este consentimiento.'}),
  ]},
  {titulo:'Tu salud en general', qs:[

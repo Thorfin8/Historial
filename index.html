@@ -58,6 +58,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--azul);}
 .oculto{display:none !important;}
 .mapa{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;}
 .mapa svg{width:100%;height:auto;display:block;}
+.mapa.uno{grid-template-columns:1fr;max-width:420px;margin:4px auto 0;}
 .mapa rect{transition:fill .15s;}
 .elegidas{font-size:13.5px;color:var(--navy);margin-top:8px;}
 .caja.aviso{background:#FFF6D9;border-left-color:#F2B705;}
@@ -115,12 +116,11 @@ const PASOS = [
    S('c_firma','Firma: escribe tu nombre completo',{req:1,ayuda:'Junto con la fecha y la hora del envío, vale como tu firma de este consentimiento.'}),
  ]},
  {titulo:'Tu dolor', intro:'Lo más importante para preparar tu valoración.', qs:[
-   S('mapa','¿Dónde te duele? Toca en el dibujo todas las zonas donde lo notas',{tipo:'mapa',req:1,ayuda:'Puedes marcar varias. Si tocas una por error, vuelve a tocarla para quitarla.'}),
+   S('mapa_lumbar','¿Dónde te duele en la zona lumbar y la pelvis? Toca todas las zonas donde lo notas',{tipo:'mapa',vista:'lumbar',req:1,ayuda:'Es tu espalda vista por detrás: tu izquierda está a la izquierda del dibujo. Puedes marcar varias; si tocas una por error, vuelve a tocarla para quitarla.'}),
+   S('mapa','¿El dolor se extiende a otras zonas (piernas, ingles…)? Márcalas en el cuerpo',{tipo:'mapa',vista:'cuerpo',ayuda:'Si no se extiende a ningún sitio, déjalo en blanco.'}),
    S('duracion','¿Cuánto tiempo llevas con este dolor?',{tipo:'radio',req:1,op:['Menos de 6 semanas','Entre 6 semanas y 3 meses','Entre 3 meses y 1 año','Entre 1 y 5 años','Más de 5 años']}),
    S('inicio','¿Cómo empezó?',{tipo:'radio',op:['De repente, con un gesto o un esfuerzo','Poco a poco, sin un motivo claro','Después de un golpe o una caída','No lo recuerdo']}),
    S('inicio_detalle','Si quieres, cuéntame cómo fue',{tipo:'area'}),
-   S('dolor_medio','Tu dolor medio en la última semana',{tipo:'escala',req:1,min:0,max:10,ext:['0 = nada','10 = el peor imaginable']}),
-   S('dolor_peor','Tu peor dolor en la última semana',{tipo:'escala',req:1,min:0,max:10,ext:['0 = nada','10 = el peor imaginable']}),
    S('evolucion','Últimamente, tu dolor va…',{tipo:'radio',op:['Mejorando','Igual','Empeorando','Por rachas']}),
    S('hormigueo','¿Notas hormigueo, adormecimiento o calambres en alguna pierna?',{tipo:'radio',op:['No','Sí, a veces','Sí, a menudo']}),
    S('que_crees','Con tus palabras: ¿qué crees que le pasa a tu espalda?',{tipo:'area'}),
@@ -135,7 +135,12 @@ const PASOS = [
    S('diagnosticos','¿Te han diagnosticado alguna de estas?',{tipo:'check',op:['Tensión alta','Diabetes','Colesterol alto','Problemas de tiroides','Osteoporosis','Artrosis','Enfermedad reumática o autoinmune','Problemas de corazón','Asma o problemas respiratorios','Ansiedad o depresión','Problemas digestivos','Cáncer (ahora o en el pasado)','Ninguna','Otra']}),
    S('diagnostico_otra','Si has marcado Otra, ¿cuál?',{si:a=>(a.diagnosticos||[]).includes('Otra')}),
    S('medicacion','¿Qué medicación tomas ahora?',{tipo:'area',ayuda:'Nombre y dosis si lo sabes. Incluye también corticoides, inyecciones o tratamientos de larga duración.'}),
-   S('cirugias','¿Has tenido alguna cirugía o lesión importante a lo largo de tu vida? ¿Cuál y cuándo?',{tipo:'area'}),
+   S('operado','¿Te han operado alguna vez?',{tipo:'radio',op:SINO}),
+   S('cirugia_cual','¿De qué te operaron y cuándo?',{tipo:'area',si:a=>a.operado==='Sí'}),
+   S('cirugia_zona','¿En qué zona del cuerpo fue la operación?',{si:a=>a.operado==='Sí'}),
+   S('cicatriz','¿Te quedó cicatriz?',{tipo:'radio',op:SINO,si:a=>a.operado==='Sí'}),
+   S('cicatriz_donde','¿Dónde está la cicatriz? Si te tira, te molesta o la notas sensible, cuéntamelo también',{tipo:'area',si:a=>a.operado==='Sí'&&a.cicatriz==='Sí'}),
+   S('lesiones','¿Has tenido alguna lesión importante (fracturas, esguinces graves…)? ¿Cuál y cuándo?',{tipo:'area'}),
    S('golpe','¿Has tenido algún golpe o caída fuerte en los últimos meses?',{tipo:'radio',op:SINO}),
    S('enfermo','¿Has estado enfermo hace poco, con fiebre o alguna infección?',{tipo:'radio',op:SINO}),
    S('otras_zonas','Además de la espalda, ¿te duele o te limita alguna otra zona del cuerpo? ¿Cuál?'),
@@ -174,7 +179,7 @@ const PASOS = [
    S('algo_mas','¿Hay algo más que quieras que sepa antes de la valoración?',{tipo:'area'}),
  ]},
  {titulo:'Cómo llegaste hasta aquí', intro:'Para saber qué funciona y mejorar. Menos de un minuto.', qs:[
-   S('donde','¿Dónde me conociste?',{tipo:'radio',req:1,op:['Instagram','YouTube','TikTok','Google','Me lo recomendó alguien','Escuela de espalda o gimnasio','Otro']}),
+   S('donde','¿Dónde me conociste?',{tipo:'radio',req:1,op:['Instagram','YouTube','Me lo recomendó alguien','Escuela de espalda o gimnasio','Otro']}),
    S('donde_otro','¿Dónde?',{si:a=>a.donde==='Otro'}),
    S('quien','Si te lo recomendó alguien, ¿quién?',{si:a=>a.donde==='Me lo recomendó alguien'}),
    S('siguiendo','¿Cuánto tiempo llevabas siguiéndome antes de apuntarte?',{tipo:'radio',op:['Menos de 1 mes','1-3 meses','3-6 meses','Más de 6 meses']}),
@@ -244,19 +249,68 @@ function svgVista(v, sel, titulo){
     <text x="160" y="470" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#5B6B82">${dch}</text>
     </g></svg>`;
 }
-function mapaPNG(sel){
+/* Mapa grande de la zona lumbar y la pelvis, vista por detrás (la izquierda del dibujo es la izquierda del paciente) */
+ZONAS.push(
+  {id:'L-costado-a',v:'L',n:'Costado izquierdo, encima de la cadera',x:34,y:14,w:44,h:112,rx:14},
+  {id:'L-costado-b',v:'L',n:'Costado derecho, encima de la cadera',x:222,y:14,w:44,h:112,rx:14},
+  {id:'L-alta-a',v:'L',n:'Lumbar alta, lado izquierdo',x:80,y:14,w:48,h:56,rx:10},
+  {id:'L-alta-c',v:'L',n:'Lumbar alta, centro (columna)',x:130,y:14,w:40,h:56,rx:10},
+  {id:'L-alta-b',v:'L',n:'Lumbar alta, lado derecho',x:172,y:14,w:48,h:56,rx:10},
+  {id:'L-baja-a',v:'L',n:'Lumbar baja, lado izquierdo',x:80,y:72,w:48,h:54,rx:10},
+  {id:'L-baja-c',v:'L',n:'Lumbar baja, centro (columna)',x:130,y:72,w:40,h:54,rx:10},
+  {id:'L-baja-b',v:'L',n:'Lumbar baja, lado derecho',x:172,y:72,w:48,h:54,rx:10},
+  {id:'L-si-a',v:'L',n:'Sacroilíaca izquierda',x:92,y:128,w:36,h:44,rx:10},
+  {id:'L-sacro',v:'L',n:'Sacro (centro, debajo de la lumbar)',poly:'130,128 170,128 164,186 136,186'},
+  {id:'L-si-b',v:'L',n:'Sacroilíaca derecha',x:172,y:128,w:36,h:44,rx:10},
+  {id:'L-cadera-a',v:'L',n:'Lateral de la cadera izquierda',x:4,y:168,w:32,h:76,rx:14},
+  {id:'L-nalga-a',v:'L',n:'Nalga izquierda',x:40,y:176,w:90,h:86,rx:30},
+  {id:'L-coxis',v:'L',n:'Coxis',x:138,y:190,w:24,h:28,rx:8},
+  {id:'L-nalga-b',v:'L',n:'Nalga derecha',x:170,y:176,w:90,h:86,rx:30},
+  {id:'L-cadera-b',v:'L',n:'Lateral de la cadera derecha',x:264,y:168,w:32,h:76,rx:14}
+);
+function svgLumbar(sel){
+  const F='font-family="Helvetica,Arial,sans-serif"';
+  const zonas = ZONAS.filter(z=>z.v==='L').map(z=>{
+    const on = sel.includes(z.id), col = `fill="${on?'#E2574C':'#E3ECF7'}" stroke="${on?'#B8392F':'#B9CBE3'}" stroke-width="1.5" stroke-linejoin="round" style="cursor:pointer"`;
+    const forma = z.poly ? `<polygon data-z="${z.id}" points="${z.poly}" ${col}>` : `<rect data-z="${z.id}" x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="${z.rx}" ${col}>`;
+    return forma + `<title>${esc(z.n)}</title>` + (z.poly?'</polygon>':'</rect>');
+  }).join('');
+  const t = (x,y,txt,on) => `<text x="${x}" y="${y}" text-anchor="middle" ${F} font-size="10" font-weight="600" fill="${on?'#fff':'#7C8DA6'}" style="pointer-events:none">${txt}</text>`;
+  const on = id => sel.includes(id);
+  return `<svg viewBox="0 0 300 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Zona lumbar y pelvis, vista por detrás">
+    <path d="M60,4 L240,4 C250,60 262,110 285,165 C300,200 296,250 280,285 L20,285 C4,250 0,200 15,165 C38,110 50,60 60,4 Z" fill="#F7FAFD" stroke="#D9E3F0" stroke-width="1.5"/>
+    ${zonas}
+    ${t(150,46,'L. alta',on('L-alta-c'))}${t(150,103,'L. baja',on('L-baja-c'))}${t(150,160,'Sacro',on('L-sacro'))}
+    ${t(110,154,'SI',on('L-si-a'))}${t(190,154,'SI',on('L-si-b'))}
+    ${t(85,224,'Nalga',on('L-nalga-a'))}${t(215,224,'Nalga',on('L-nalga-b'))}
+    <text x="20" y="310" ${F} font-size="12" fill="#5B6B82">Izq.</text>
+    <text x="280" y="310" text-anchor="end" ${F} font-size="12" fill="#5B6B82">Dcha.</text>
+  </svg>`;
+}
+function svgAPng(svg, w, h){
   return new Promise((ok,ko)=>{
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="420" height="500" viewBox="0 0 420 500"><rect width="420" height="500" fill="#fff"/>`+
-      `<g>${svgVista('E',sel,'De espaldas').replace(/^<svg[^>]*>/,'').replace(/<\/svg>$/,'')}</g>`+
-      `<g transform="translate(220,0)">${svgVista('F',sel,'De frente').replace(/^<svg[^>]*>/,'').replace(/<\/svg>$/,'')}</g></svg>`;
     const img = new Image();
-    img.onload = () => { const c=document.createElement('canvas'); c.width=840; c.height=1000; const x=c.getContext('2d'); x.scale(2,2); x.drawImage(img,0,0); ok(c.toDataURL('image/png')); };
+    img.onload = () => { const c=document.createElement('canvas'); c.width=w*2; c.height=h*2; const x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height); x.scale(2,2); x.drawImage(img,0,0,w,h); ok(c.toDataURL('image/png')); };
     img.onerror = ko;
     img.src = 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
   });
 }
-let mapaImg = null;
-async function prepararMapa(){ try { mapaImg = vacio(A.mapa) ? null : await mapaPNG(A.mapa); } catch(e){ mapaImg = null; } }
+function mapaPNG(sel){
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="420" height="500" viewBox="0 0 420 500"><rect width="420" height="500" fill="#fff"/>`+
+    `<g>${svgVista('E',sel,'De espaldas').replace(/^<svg[^>]*>/,'').replace(/<\/svg>$/,'')}</g>`+
+    `<g transform="translate(220,0)">${svgVista('F',sel,'De frente').replace(/^<svg[^>]*>/,'').replace(/<\/svg>$/,'')}</g></svg>`;
+  return svgAPng(svg,420,500);
+}
+function lumbarPNG(sel){
+  return svgAPng(svgLumbar(sel).replace('<svg ','<svg width="300" height="320" '),300,320);
+}
+let mapaImg = {}, mapaListo = false;
+async function prepararMapa(){
+  mapaImg = {};
+  try { if(!vacio(A.mapa_lumbar)) mapaImg.mapa_lumbar = await lumbarPNG(A.mapa_lumbar); } catch(e){}
+  try { if(!vacio(A.mapa)) mapaImg.mapa = await mapaPNG(A.mapa); } catch(e){}
+  mapaListo = true;
+}
 
 /* ===== Aviso si se abre dentro de Instagram, Facebook o TikTok ===== */
 const DENTRO_APP = /Instagram|FBAN|FBAV|FB_IAB|TikTok|musical_ly|Bytedance|Snapchat|Line\//i.test(navigator.userAgent||'');
@@ -310,7 +364,7 @@ function pintarQ(q){
     }).join('')+`</div>`;
   } else if (q.tipo==='mapa') {
     const sel=v||[];
-    c = `<div class="mapa">${svgVista('E',sel,'De espaldas')}${svgVista('F',sel,'De frente')}</div><div class="elegidas">${sel.length?'<strong>Has marcado:</strong> '+sel.map(z=>esc(nombreZona(z))).join(', '):'Aún no has marcado ninguna zona.'}</div>`;
+    c = (q.vista==='lumbar' ? `<div class="mapa uno">${svgLumbar(sel)}</div>` : `<div class="mapa">${svgVista('E',sel,'De espaldas')}${svgVista('F',sel,'De frente')}</div>`) + `<div class="elegidas">${sel.length?'<strong>Has marcado:</strong> '+sel.map(z=>esc(nombreZona(z))).join(', '):'Aún no has marcado ninguna zona.'}</div>`;
   } else if (q.tipo==='escala') {
     let b=''; for(let n=q.min;n<=q.max;n++) b+=`<button type="button" data-id="${q.id}" data-n="${n}" class="${v===n?'on':''}">${n}</button>`;
     c = `<div class="escala">${b}</div><div class="extremos"><span>${esc(q.ext[0])}</span><span>${esc(q.ext[1])}</span></div>`;
@@ -331,12 +385,12 @@ function enlazar(){
     if (t!=='radio' || antes!==refVisibles) { refVisibles=antes; }
     repintarConFoco();
   }));
-  $main.querySelectorAll('[data-z]').forEach(el=>el.addEventListener('click',()=>{ const z=el.dataset.z; let arr=(A.mapa||[]).filter(x=>x!==z); if(arr.length===(A.mapa||[]).length) arr.push(z); A.mapa=arr.length?arr:undefined; guardar(); quitarErr('mapa'); repintarConFoco(); }));
+  $main.querySelectorAll('[data-z]').forEach(el=>el.addEventListener('click',()=>{ const z=el.dataset.z, k=z.startsWith('L-')?'mapa_lumbar':'mapa'; let arr=(A[k]||[]).filter(x=>x!==z); if(arr.length===(A[k]||[]).length) arr.push(z); A[k]=arr.length?arr:undefined; mapaListo=false; guardar(); quitarErr(k); repintarConFoco(); }));
   $main.querySelectorAll('[data-ir]').forEach(el=>el.addEventListener('click',()=>ir(+el.dataset.ir)));
   $main.querySelectorAll('.escala button').forEach(el=>el.addEventListener('click',()=>{A[el.dataset.id]=+el.dataset.n; guardar(); quitarErr(el.dataset.id); repintarConFoco();}));
   const r=document.getElementById('reiniciar'); if(r) r.onclick=()=>{ if(confirm('¿Borrar todas tus respuestas y empezar de cero?')){A={};paso=0;guardar();pintar();} };
   const f=document.getElementById('enviar'); if(f) f.onclick=enviar;
-  const d=document.getElementById('descargar'); if(d) d.onclick=async()=>{ if(!mapaImg) await prepararMapa(); const {doc,nombre}=crearPDF(); doc.save(nombre); };
+  const d=document.getElementById('descargar'); if(d) d.onclick=async()=>{ if(!mapaListo) await prepararMapa(); const {doc,nombre}=crearPDF(); doc.save(nombre); };
   const e=document.getElementById('editar'); if(e) e.onclick=()=>ir(1);
   const b=document.getElementById('borrar'); if(b) b.onclick=()=>{ if(confirm('¿Borrar tus respuestas de este dispositivo? Hazlo solo cuando ya me hayas enviado el PDF.')){A={};paso=0;enviado=false;try{localStorage.removeItem(CLAVE);}catch(e){} pintar();} };
 }
@@ -386,7 +440,7 @@ function pintarFinal(){
 async function enviar(){
   const btn=document.getElementById('enviar'); btn.disabled=true;
   try{
-    if(!mapaImg && !vacio(A.mapa)) await prepararMapa();
+    if(!mapaListo) await prepararMapa();
     const {doc,nombre}=crearPDF();
     const blob=doc.output('blob'), file=new File([blob],nombre,{type:'application/pdf'});
     if (navigator.canShare && navigator.canShare({files:[file]})) {
@@ -422,7 +476,7 @@ function crearPDF(){
     salto(16); doc.setFont('helvetica','bold'); doc.setFontSize(12.5); doc.setTextColor(...AZUL); doc.text(limpio(P.titulo.toUpperCase()),M,y); y+=2;
     doc.setDrawColor(217,227,240); doc.line(M,y,W-M,y); y+=6;
     P.qs.filter(visible).forEach(q=>{
-      if (q.tipo==='mapa' && mapaImg) { salto(82); doc.addImage(mapaImg,'PNG',M,y,64,76); y+=79; }
+      if (q.tipo==='mapa' && mapaImg[q.id]) { const alto = q.vista==='lumbar' ? 68 : 76; salto(alto+6); doc.addImage(mapaImg[q.id],'PNG',M,y,64,alto); y+=alto+3; }
       const pl=doc.setFont('helvetica','normal').setFontSize(9).splitTextToSize(limpio(q.t),ancho);
       const rl=doc.setFont('helvetica','bold').setFontSize(10.5).splitTextToSize(limpio(texto(q)),ancho);
       salto(pl.length*4+rl.length*5+4);

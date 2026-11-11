@@ -56,6 +56,17 @@ input:focus,textarea:focus{outline:none;border-color:var(--azul);}
 .resumen dd{margin:0;font-weight:500;}
 .ok{font-size:44px;margin:10px 0 0;}
 .oculto{display:none !important;}
+.mapa{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;}
+.mapa svg{width:100%;height:auto;display:block;}
+.mapa rect{transition:fill .15s;}
+.elegidas{font-size:13.5px;color:var(--navy);margin-top:8px;}
+.caja.aviso{background:#FFF6D9;border-left-color:#F2B705;}
+.repaso{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:12px 14px;margin:0 0 12px;}
+.repaso h3{display:flex;justify-content:space-between;align-items:center;margin:0 0 4px;font-size:15px;color:var(--navy);}
+.repaso h3 button{font:inherit;font-size:13.5px;font-weight:600;color:var(--azul);background:none;border:0;cursor:pointer;padding:4px 0;}
+.repaso dt{font-size:12.5px;color:var(--gris);margin-top:7px;}
+.repaso dd{margin:0;font-size:14.5px;font-weight:500;}
+.repaso dd.nada{color:#9AA7B8;font-weight:400;}
 .volverwrap{max-width:640px;margin:0 auto;padding:12px 16px 0;}
 .volver{font:inherit;font-size:15px;font-weight:600;color:var(--azul);background:none;border:0;padding:6px 0;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
 .volver span{font-size:20px;line-height:1;}
@@ -87,15 +98,15 @@ const S = (id,t,o={}) => Object.assign({id,t,tipo:'texto'},o);
 const SINO = ['Sí','No'];
 const PASOS = [
  {titulo:'Bienvenido', bienvenida:true},
- {titulo:'Tus datos', intro:'Para la factura y para poder escribirte.', qs:[
-   S('nombre','Nombre y apellidos',{req:1}),
-   S('dni','DNI o NIE',{req:1}),
+ {titulo:'Tus datos', intro:'Para poder escribirte y hacerte la factura.', qs:[
+   S('nombre','Nombre y apellidos (para la factura)',{req:1}),
+   S('dni','DNI o NIE (para la factura)',{req:1}),
+   S('direccion','Dirección: calle, número y piso (para la factura)',{req:1}),
+   S('cp','Código postal (para la factura)',{tipo:'num',req:1}),
+   S('localidad','Localidad y provincia (para la factura)',{req:1}),
    S('email','Correo electrónico',{tipo:'email',req:1}),
    S('telefono','Teléfono',{tipo:'tel',req:1,ph:'Ejemplo: 600 123 456'}),
-   S('localidad','Localidad',{req:1}),
    S('edad','Edad',{tipo:'num',req:1}),
-   S('altura','Altura en cm',{tipo:'num',req:1}),
-   S('peso','Peso en kg',{tipo:'num',req:1}),
  ]},
  {titulo:'Consentimiento', intro:'Es la política de privacidad que te mandé por email. Marca cada casilla para aceptarla.', qs:[
    S('c_politica','He leído la Política de Privacidad y Exoneración de Responsabilidad (incluida la política de pagos y cancelaciones), la entiendo y la acepto en su totalidad.',{tipo:'acepto',req:1,op:'Acepto'}),
@@ -103,7 +114,22 @@ const PASOS = [
    S('c_mayor','Soy mayor de edad.',{tipo:'acepto',req:1,op:'Sí'}),
    S('c_firma','Firma: escribe tu nombre completo',{req:1,ayuda:'Junto con la fecha y la hora del envío, vale como tu firma de este consentimiento.'}),
  ]},
+ {titulo:'Tu dolor', intro:'Lo más importante para preparar tu valoración.', qs:[
+   S('mapa','¿Dónde te duele? Toca en el dibujo todas las zonas donde lo notas',{tipo:'mapa',req:1,ayuda:'Puedes marcar varias. Si tocas una por error, vuelve a tocarla para quitarla.'}),
+   S('duracion','¿Cuánto tiempo llevas con este dolor?',{tipo:'radio',req:1,op:['Menos de 6 semanas','Entre 6 semanas y 3 meses','Entre 3 meses y 1 año','Entre 1 y 5 años','Más de 5 años']}),
+   S('inicio','¿Cómo empezó?',{tipo:'radio',op:['De repente, con un gesto o un esfuerzo','Poco a poco, sin un motivo claro','Después de un golpe o una caída','No lo recuerdo']}),
+   S('inicio_detalle','Si quieres, cuéntame cómo fue',{tipo:'area'}),
+   S('dolor_medio','Tu dolor medio en la última semana',{tipo:'escala',req:1,min:0,max:10,ext:['0 = nada','10 = el peor imaginable']}),
+   S('dolor_peor','Tu peor dolor en la última semana',{tipo:'escala',req:1,min:0,max:10,ext:['0 = nada','10 = el peor imaginable']}),
+   S('evolucion','Últimamente, tu dolor va…',{tipo:'radio',op:['Mejorando','Igual','Empeorando','Por rachas']}),
+   S('hormigueo','¿Notas hormigueo, adormecimiento o calambres en alguna pierna?',{tipo:'radio',op:['No','Sí, a veces','Sí, a menudo']}),
+   S('que_crees','Con tus palabras: ¿qué crees que le pasa a tu espalda?',{tipo:'area'}),
+   S('pruebas','¿Tienes pruebas de imagen o informes (resonancias, radiografías…)?',{tipo:'radio',op:['Sí, te los mando por WhatsApp','No tengo'],ayuda:'Si los tienes, mándamelos por WhatsApp junto con este historial.'}),
+   S('expectativas','¿Qué esperas conseguir con el programa?',{tipo:'area'}),
+ ]},
  {titulo:'Tu salud en general', qs:[
+   S('altura','Altura en cm',{tipo:'num',req:1}),
+   S('peso','Peso en kg',{tipo:'num',req:1}),
    S('peso_cambio','¿Ha cambiado tu peso en los últimos meses sin que lo buscaras?',{tipo:'radio',op:['No','Sí, he bajado','Sí, he subido']}),
    S('salud','¿Cómo valoras tu salud en general?',{tipo:'escala',min:1,max:5,ext:['1 = muy mala','5 = muy buena']}),
    S('diagnosticos','¿Te han diagnosticado alguna de estas?',{tipo:'check',op:['Tensión alta','Diabetes','Colesterol alto','Problemas de tiroides','Osteoporosis','Artrosis','Enfermedad reumática o autoinmune','Problemas de corazón','Asma o problemas respiratorios','Ansiedad o depresión','Problemas digestivos','Cáncer (ahora o en el pasado)','Ninguna','Otra']}),
@@ -132,8 +158,7 @@ const PASOS = [
    S('estres','¿Cómo es tu nivel de estrés en un día normal?',{tipo:'escala',min:0,max:10,ext:['0 = nada','10 = máximo']}),
    S('piernas','¿Notas las piernas débiles o que te fallan, y cada vez más?',{tipo:'radio',op:SINO}),
  ]},
- {titulo:'Tu espalda y tus hábitos', qs:[
-   S('que_crees','Con tus palabras: ¿qué crees que le pasa a tu espalda?',{tipo:'area'}),
+ {titulo:'Tus hábitos', qs:[
    S('actividad','¿Cuántos días a la semana haces actividad física? ¿Cuál?'),
    S('pasos','¿Cuántos pasos das al día más o menos?',{tipo:'radio',op:['Menos de 3.000','3.000-6.000','6.000-10.000','Más de 10.000','No lo sé']}),
    S('pantalla','Horas de pantalla al día fuera del trabajo',{tipo:'num'}),
@@ -146,8 +171,6 @@ const PASOS = [
    S('tiempo','¿Cuánto tiempo puedes dedicar al día a tus ejercicios?',{tipo:'radio',op:['10-15 min','15-30 min','30-45 min','Más de 45 min']}),
    S('material','¿Qué material tienes?',{tipo:'check',op:['Esterilla','Gomas elásticas','Mancuernas o pesas','Foam roller (rulo)','Acceso a un gimnasio','Nada por ahora']}),
    S('horario','¿En qué horario te vienen mejor las sesiones conmigo?',{tipo:'check',op:['Mañana','Mediodía','Tarde','Noche']}),
-   S('pruebas','¿Tienes pruebas de imagen o informes (resonancias, radiografías…)?',{tipo:'radio',op:['Sí, te los mando por WhatsApp','No tengo'],ayuda:'Si los tienes, mándamelos por WhatsApp junto con este historial.'}),
-   S('expectativas','¿Qué esperas conseguir con el programa?',{tipo:'area'}),
    S('algo_mas','¿Hay algo más que quieras que sepa antes de la valoración?',{tipo:'area'}),
  ]},
  {titulo:'Cómo llegaste hasta aquí', intro:'Para saber qué funciona y mejorar. Menos de un minuto.', qs:[
@@ -171,6 +194,74 @@ const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>
 const visible = q => !q.si || q.si(A);
 const vacio = v => v===undefined || v===null || v==='' || (Array.isArray(v)&&!v.length);
 
+/* ===== Mapa del dolor ===== */
+// De espaldas: la izquierda del dibujo es la izquierda del paciente. De frente: es su derecha.
+const ZONAS = (()=>{
+  const z = [];
+  const par = (vista, base, nombreI, nombreD, x1, x2, y, w, h, rx) => {
+    // x1 = lado izquierdo del dibujo, x2 = lado derecho del dibujo
+    const izqDibujo = vista==='E' ? nombreI : nombreD, dchDibujo = vista==='E' ? nombreD : nombreI;
+    z.push({id:`${vista}-${base}-a`, v:vista, n:izqDibujo, x:x1, y, w, h, rx});
+    z.push({id:`${vista}-${base}-b`, v:vista, n:dchDibujo, x:x2, y, w, h, rx});
+  };
+  // De espaldas
+  z.push({id:'E-cuello',v:'E',n:'Cuello (por detrás)',x:89,y:56,w:22,h:16,rx:6});
+  par('E','brazo','Hombro y brazo izquierdo','Hombro y brazo derecho',38,138,78,24,118,12);
+  z.push({id:'E-dorsal',v:'E',n:'Espalda alta',x:66,y:74,w:68,h:84,rx:14});
+  z.push({id:'E-lumbar-a',v:'E',n:'Zona lumbar, lado izquierdo',x:66,y:160,w:22,h:48,rx:6});
+  z.push({id:'E-lumbar-c',v:'E',n:'Zona lumbar, centro',x:90,y:160,w:20,h:48,rx:6});
+  z.push({id:'E-lumbar-b',v:'E',n:'Zona lumbar, lado derecho',x:112,y:160,w:22,h:48,rx:6});
+  par('E','nalga','Nalga izquierda','Nalga derecha',66,101,210,33,42,12);
+  par('E','muslo','Muslo izquierdo (por detrás)','Muslo derecho (por detrás)',67,102,254,31,84,12);
+  par('E','corva','Detrás de la rodilla izquierda','Detrás de la rodilla derecha',68,103,340,29,22,8);
+  par('E','gemelo','Pantorrilla izquierda','Pantorrilla derecha',69,104,364,27,66,12);
+  par('E','talon','Talón o planta izquierda','Talón o planta derecha',64,102,432,34,18,8);
+  // De frente
+  z.push({id:'F-cuello',v:'F',n:'Cuello (por delante)',x:89,y:56,w:22,h:16,rx:6});
+  par('F','brazo','Hombro y brazo izquierdo','Hombro y brazo derecho',38,138,78,24,118,12);
+  z.push({id:'F-pecho',v:'F',n:'Pecho',x:66,y:74,w:68,h:84,rx:14});
+  z.push({id:'F-abdomen',v:'F',n:'Abdomen',x:66,y:160,w:68,h:48,rx:6});
+  par('F','ingle','Ingle izquierda','Ingle derecha',66,101,210,33,42,12);
+  par('F','muslo','Muslo izquierdo (por delante)','Muslo derecho (por delante)',67,102,254,31,84,12);
+  par('F','rodilla','Rodilla izquierda','Rodilla derecha',68,103,340,29,22,8);
+  par('F','espinilla','Espinilla izquierda','Espinilla derecha',69,104,364,27,66,12);
+  par('F','pie','Pie izquierdo','Pie derecho',64,102,432,34,18,8);
+  return z;
+})();
+const nombreZona = id => (ZONAS.find(z=>z.id===id)||{}).n || id;
+function svgVista(v, sel, titulo){
+  const izq = v==='E' ? 'Izq.' : 'Dcha.', dch = v==='E' ? 'Dcha.' : 'Izq.';
+  const rects = ZONAS.filter(z=>z.v===v).map(z=>{
+    const on = sel.includes(z.id);
+    return `<rect data-z="${z.id}" x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="${z.rx}" fill="${on?'#E2574C':'#E3ECF7'}" stroke="${on?'#B8392F':'#B9CBE3'}" stroke-width="1.5" style="cursor:pointer"><title>${esc(z.n)}</title></rect>`;
+  }).join('');
+  return `<svg viewBox="0 0 200 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${titulo}">
+    <text x="100" y="14" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" font-weight="700" fill="#0E2652">${titulo}</text>
+    <g transform="translate(0,22)">
+    <ellipse cx="100" cy="32" rx="20" ry="24" fill="#F1F5FB" stroke="#B9CBE3" stroke-width="1.5"/>
+    ${rects}
+    <text x="40" y="470" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#5B6B82">${izq}</text>
+    <text x="160" y="470" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#5B6B82">${dch}</text>
+    </g></svg>`;
+}
+function mapaPNG(sel){
+  return new Promise((ok,ko)=>{
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="420" height="500" viewBox="0 0 420 500"><rect width="420" height="500" fill="#fff"/>`+
+      `<g>${svgVista('E',sel,'De espaldas').replace(/^<svg[^>]*>/,'').replace(/<\/svg>$/,'')}</g>`+
+      `<g transform="translate(220,0)">${svgVista('F',sel,'De frente').replace(/^<svg[^>]*>/,'').replace(/<\/svg>$/,'')}</g></svg>`;
+    const img = new Image();
+    img.onload = () => { const c=document.createElement('canvas'); c.width=840; c.height=1000; const x=c.getContext('2d'); x.scale(2,2); x.drawImage(img,0,0); ok(c.toDataURL('image/png')); };
+    img.onerror = ko;
+    img.src = 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+  });
+}
+let mapaImg = null;
+async function prepararMapa(){ try { mapaImg = vacio(A.mapa) ? null : await mapaPNG(A.mapa); } catch(e){ mapaImg = null; } }
+
+/* ===== Aviso si se abre dentro de Instagram, Facebook o TikTok ===== */
+const DENTRO_APP = /Instagram|FBAN|FBAV|FB_IAB|TikTok|musical_ly|Bytedance|Snapchat|Line\//i.test(navigator.userAgent||'');
+const AVISO_APP = DENTRO_APP ? `<div class="caja aviso"><p><strong>Ábrelo en tu navegador.</strong> Estás dentro de una app (Instagram, Facebook…) y desde aquí puede fallar el envío del PDF.</p><p>Pulsa los tres puntos <strong>⋯</strong> de arriba y elige <strong>«Abrir en el navegador»</strong> (Safari o Chrome).</p></div>` : '';
+
 /* ===== Pintar ===== */
 const $main = document.getElementById('main'), $sig = document.getElementById('siguiente'), $atr = document.getElementById('atras');
 function pintar(){
@@ -182,10 +273,10 @@ function pintar(){
   $sig.textContent = paso===0 ? (Object.keys(A).length ? 'Seguir donde lo dejé' : 'Empezar') : 'Siguiente';
   let h = '';
   if (P.bienvenida) {
-    h = `<h1>Tu historial de salud</h1>
+    h = `${AVISO_APP}<h1>Tu historial de salud</h1>
     <p class="intro">Antes de tu valoración necesito conocerte bien. Te lleva unos 15 minutos.</p>
     <div class="caja"><p><strong>Cómo funciona:</strong></p>
-    <p>1. Respondes por partes: datos, consentimiento, salud, hábitos y tu plan.</p>
+    <p>1. Respondes por partes: tus datos, el consentimiento, tu dolor, tu salud, tus hábitos y tu plan.</p>
     <p>2. Al final se crea un PDF con tus respuestas y me lo mandas por WhatsApp con un toque.</p>
     <p>3. Lo que escribes se guarda solo en tu móvil u ordenador: si lo dejas a medias, puedes seguir luego desde el mismo enlace.</p></div>
     <p class="intro">Tus respuestas no se guardan en ninguna web: solo me llegan a mí, en el PDF que tú me envías.</p>
@@ -199,6 +290,7 @@ function pintar(){
   $main.innerHTML = h;
   enlazar();
   window.scrollTo(0,0);
+  if (P.final) prepararMapa();
 }
 function pintarQ(q){
   const v = A[q.id], id='q_'+q.id;
@@ -216,6 +308,9 @@ function pintarQ(q){
       const on = q.tipo==='acepto' ? v===true : (multi ? (v||[]).includes(o) : v===o);
       return `<label class="op${on?' on':''}"><input type="${multi?'checkbox':'radio'}" name="${id}" data-id="${q.id}" data-v="${esc(o)}" data-t="${q.tipo}"${on?' checked':''}>${esc(o)}</label>`;
     }).join('')+`</div>`;
+  } else if (q.tipo==='mapa') {
+    const sel=v||[];
+    c = `<div class="mapa">${svgVista('E',sel,'De espaldas')}${svgVista('F',sel,'De frente')}</div><div class="elegidas">${sel.length?'<strong>Has marcado:</strong> '+sel.map(z=>esc(nombreZona(z))).join(', '):'Aún no has marcado ninguna zona.'}</div>`;
   } else if (q.tipo==='escala') {
     let b=''; for(let n=q.min;n<=q.max;n++) b+=`<button type="button" data-id="${q.id}" data-n="${n}" class="${v===n?'on':''}">${n}</button>`;
     c = `<div class="escala">${b}</div><div class="extremos"><span>${esc(q.ext[0])}</span><span>${esc(q.ext[1])}</span></div>`;
@@ -236,10 +331,12 @@ function enlazar(){
     if (t!=='radio' || antes!==refVisibles) { refVisibles=antes; }
     repintarConFoco();
   }));
+  $main.querySelectorAll('[data-z]').forEach(el=>el.addEventListener('click',()=>{ const z=el.dataset.z; let arr=(A.mapa||[]).filter(x=>x!==z); if(arr.length===(A.mapa||[]).length) arr.push(z); A.mapa=arr.length?arr:undefined; guardar(); quitarErr('mapa'); repintarConFoco(); }));
+  $main.querySelectorAll('[data-ir]').forEach(el=>el.addEventListener('click',()=>ir(+el.dataset.ir)));
   $main.querySelectorAll('.escala button').forEach(el=>el.addEventListener('click',()=>{A[el.dataset.id]=+el.dataset.n; guardar(); quitarErr(el.dataset.id); repintarConFoco();}));
   const r=document.getElementById('reiniciar'); if(r) r.onclick=()=>{ if(confirm('¿Borrar todas tus respuestas y empezar de cero?')){A={};paso=0;guardar();pintar();} };
   const f=document.getElementById('enviar'); if(f) f.onclick=enviar;
-  const d=document.getElementById('descargar'); if(d) d.onclick=()=>{ const {doc,nombre}=crearPDF(); doc.save(nombre); };
+  const d=document.getElementById('descargar'); if(d) d.onclick=async()=>{ if(!mapaImg) await prepararMapa(); const {doc,nombre}=crearPDF(); doc.save(nombre); };
   const e=document.getElementById('editar'); if(e) e.onclick=()=>ir(1);
   const b=document.getElementById('borrar'); if(b) b.onclick=()=>{ if(confirm('¿Borrar tus respuestas de este dispositivo? Hazlo solo cuando ya me hayas enviado el PDF.')){A={};paso=0;enviado=false;try{localStorage.removeItem(CLAVE);}catch(e){} pintar();} };
 }
@@ -272,7 +369,9 @@ function pintarFinal(){
   if (f.length) return `<h1>Casi está</h1><p class="intro">Falta alguna respuesta obligatoria en: <strong>${f.map(i=>esc(PASOS[i].titulo)).join(', ')}</strong>.</p>
     <button class="btn pri" style="width:100%" type="button" onclick="ir(${f[0]})">Ir a completarlo</button>`;
   const puedeCompartir = !!(navigator.canShare && window.File && navigator.canShare({files:[new File(['x'],'x.pdf',{type:'application/pdf'})]}));
-  return `<p class="paso">Último paso</p><h1>${enviado?'¡Gracias!':'Envíamelo por WhatsApp'}</h1>
+  const repaso = PASOS.map((P,i)=>{ if(!P.qs) return ''; return `<div class="repaso"><h3>${esc(P.titulo)}<button type="button" data-ir="${i}">Cambiar</button></h3><dl>`+P.qs.filter(visible).map(q=>{ const t=vacio(A[q.id])?'Sin responder':texto(q); return `<dt>${esc(q.t)}</dt><dd class="${vacio(A[q.id])?'nada':''}">${esc(t)}</dd>`; }).join('')+`</dl></div>`; }).join('');
+  return `${AVISO_APP}<p class="paso">Último paso</p><h1>${enviado?'¡Gracias!':'Repasa y envíamelo'}</h1>
+  ${enviado?'':`<p class="intro">Repasa tus respuestas. Si quieres cambiar algo, pulsa «Cambiar» en esa parte. Cuando esté todo bien, envíamelo con el botón verde de abajo.</p>${repaso}`}
   ${enviado?`<p class="ok">✅</p><p class="intro">Si ya me ha llegado el PDF por WhatsApp, está todo. Lo leo antes de tu valoración.</p>`:''}
   <div class="caja">${puedeCompartir
     ? `<p>Pulsa el botón verde. Se abrirá la opción de compartir: elige <strong>WhatsApp</strong> y después <strong>mi chat</strong>.</p>`
@@ -281,12 +380,13 @@ function pintarFinal(){
   <button class="btn wa" type="button" id="enviar">${puedeCompartir?'Enviar a Victor por WhatsApp':'Descargar el PDF para enviarlo'}</button>
   ${!puedeCompartir&&WHATSAPP_VICTOR?`<a class="btn sec" style="display:block;text-align:center;text-decoration:none" href="https://wa.me/${WHATSAPP_VICTOR}" target="_blank" rel="noopener">Abrir mi chat de WhatsApp</a>`:''}
   ${puedeCompartir?'<button class="btn lnk" type="button" id="descargar">O descargar el PDF</button><br>':''}
-  <button class="btn lnk" type="button" id="editar">Revisar o cambiar respuestas</button><br>
+  ${enviado?'<button class="btn lnk" type="button" id="editar">Revisar o cambiar respuestas</button><br>':''}
   ${enviado?'<button class="btn lnk" type="button" id="borrar">Ya te lo he enviado: borrar mis respuestas de este dispositivo</button>':''}`;
 }
 async function enviar(){
   const btn=document.getElementById('enviar'); btn.disabled=true;
   try{
+    if(!mapaImg && !vacio(A.mapa)) await prepararMapa();
     const {doc,nombre}=crearPDF();
     const blob=doc.output('blob'), file=new File([blob],nombre,{type:'application/pdf'});
     if (navigator.canShare && navigator.canShare({files:[file]})) {
@@ -301,6 +401,7 @@ async function enviar(){
 function texto(q){ const v=A[q.id];
   if (vacio(v)) return '—';
   if (q.tipo==='acepto') return '✓ '+q.op;
+  if (q.tipo==='mapa') return v.map(nombreZona).join(', ');
   if (Array.isArray(v)) return v.join(', ');
   if (q.tipo==='escala') return v+' (de '+q.min+' a '+q.max+'; '+q.ext[0]+')';
   return String(v);
@@ -321,6 +422,7 @@ function crearPDF(){
     salto(16); doc.setFont('helvetica','bold'); doc.setFontSize(12.5); doc.setTextColor(...AZUL); doc.text(limpio(P.titulo.toUpperCase()),M,y); y+=2;
     doc.setDrawColor(217,227,240); doc.line(M,y,W-M,y); y+=6;
     P.qs.filter(visible).forEach(q=>{
+      if (q.tipo==='mapa' && mapaImg) { salto(82); doc.addImage(mapaImg,'PNG',M,y,64,76); y+=79; }
       const pl=doc.setFont('helvetica','normal').setFontSize(9).splitTextToSize(limpio(q.t),ancho);
       const rl=doc.setFont('helvetica','bold').setFontSize(10.5).splitTextToSize(limpio(texto(q)),ancho);
       salto(pl.length*4+rl.length*5+4);

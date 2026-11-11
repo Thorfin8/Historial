@@ -56,6 +56,9 @@ input:focus,textarea:focus{outline:none;border-color:var(--azul);}
 .resumen dd{margin:0;font-weight:500;}
 .ok{font-size:44px;margin:10px 0 0;}
 .oculto{display:none !important;}
+.volverwrap{max-width:640px;margin:0 auto;padding:12px 16px 0;}
+.volver{font:inherit;font-size:15px;font-weight:600;color:var(--azul);background:none;border:0;padding:6px 0;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+.volver span{font-size:20px;line-height:1;}
 a{color:var(--azul);}
 </style>
 </head>
@@ -65,9 +68,10 @@ a{color:var(--azul);}
   <div><p class="t1">VICTOR SANZ FISIO</p><p class="t2">Historial de salud · Lumbar de Acero</p></div>
 </header>
 <div class="barra"><i id="barra"></i></div>
+<div class="volverwrap"><button class="volver" id="volver" type="button"><span>←</span> Atrás</button></div>
 <main id="main"></main>
 <div class="pie" id="pie"><div class="in">
-  <button class="btn sec" id="atras" type="button">Atrás</button>
+  <button class="btn sec" id="atras" type="button">← Atrás</button>
   <button class="btn pri" id="siguiente" type="button">Empezar</button>
 </div></div>
 
@@ -173,6 +177,7 @@ function pintar(){
   const P = PASOS[paso];
   document.getElementById('barra').style.width = (paso/(PASOS.length-1)*100)+'%';
   $atr.classList.toggle('oculto', paso===0);
+  document.getElementById('volver').parentNode.classList.toggle('oculto', paso===0);
   document.getElementById('pie').classList.toggle('oculto', !!P.final);
   $sig.textContent = paso===0 ? (Object.keys(A).length ? 'Seguir donde lo dejé' : 'Empezar') : 'Siguiente';
   let h = '';
@@ -235,7 +240,7 @@ function enlazar(){
   const r=document.getElementById('reiniciar'); if(r) r.onclick=()=>{ if(confirm('¿Borrar todas tus respuestas y empezar de cero?')){A={};paso=0;guardar();pintar();} };
   const f=document.getElementById('enviar'); if(f) f.onclick=enviar;
   const d=document.getElementById('descargar'); if(d) d.onclick=()=>{ const {doc,nombre}=crearPDF(); doc.save(nombre); };
-  const e=document.getElementById('editar'); if(e) e.onclick=()=>{paso=1;guardar();pintar();};
+  const e=document.getElementById('editar'); if(e) e.onclick=()=>ir(1);
   const b=document.getElementById('borrar'); if(b) b.onclick=()=>{ if(confirm('¿Borrar tus respuestas de este dispositivo? Hazlo solo cuando ya me hayas enviado el PDF.')){A={};paso=0;enviado=false;try{localStorage.removeItem(CLAVE);}catch(e){} pintar();} };
 }
 let refVisibles='';
@@ -251,15 +256,21 @@ function validar(){
   if(primero){ primero.scrollIntoView({behavior:'smooth',block:'center'}); return false; }
   return true;
 }
-$sig.onclick=()=>{ if(!validar()) return; if(paso<PASOS.length-1){paso++;guardar();pintar();} };
-$atr.onclick=()=>{ if(paso>0){paso--;guardar();pintar();} };
+/* Navegación: el gesto o botón «atrás» del móvil también va al paso anterior */
+let pila=0;
+function ir(n){ paso=n; guardar(); try{history.pushState({paso:n},'');pila++;}catch(e){} pintar(); }
+function atras(){ if(paso<=0) return; if(pila>0){ history.back(); } else { paso--; guardar(); try{history.replaceState({paso},'');}catch(e){} pintar(); } }
+window.addEventListener('popstate',e=>{ pila=Math.max(0,pila-1); paso=(e.state&&Number.isInteger(e.state.paso))?e.state.paso:0; guardar(); pintar(); });
+try{history.replaceState({paso},'');}catch(e){}
+$sig.onclick=()=>{ if(!validar()) return; if(paso<PASOS.length-1) ir(paso+1); };
+$atr.onclick=atras; document.getElementById('volver').onclick=atras;
 
 /* ===== Final ===== */
 function faltan(){ const f=[]; PASOS.forEach((P,i)=>(P.qs||[]).filter(visible).forEach(q=>{ if(q.req&&vacio(A[q.id])) f.push(i); })); return [...new Set(f)]; }
 function pintarFinal(){
   const f=faltan();
   if (f.length) return `<h1>Casi está</h1><p class="intro">Falta alguna respuesta obligatoria en: <strong>${f.map(i=>esc(PASOS[i].titulo)).join(', ')}</strong>.</p>
-    <button class="btn pri" style="width:100%" type="button" onclick="paso=${f[0]};guardar();pintar();">Ir a completarlo</button>`;
+    <button class="btn pri" style="width:100%" type="button" onclick="ir(${f[0]})">Ir a completarlo</button>`;
   const puedeCompartir = !!(navigator.canShare && window.File && navigator.canShare({files:[new File(['x'],'x.pdf',{type:'application/pdf'})]}));
   return `<p class="paso">Último paso</p><h1>${enviado?'¡Gracias!':'Envíamelo por WhatsApp'}</h1>
   ${enviado?`<p class="ok">✅</p><p class="intro">Si ya me ha llegado el PDF por WhatsApp, está todo. Lo leo antes de tu valoración.</p>`:''}

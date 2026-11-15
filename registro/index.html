@@ -213,7 +213,7 @@ function bloqueSemana(l, n, total){
   <div class="q"><span class="l">¿Pasó algo fuera del programa?<span class="ayuda">Mucha carga en el trabajo, dormir mal, un viaje, un partido, estrés… Si salió algún rojo, cuéntamelo aquí.</span></span>
     <textarea data-txt="fuera" id="fuera_${k}">${esc(w.fuera)}</textarea>${mic('fuera_'+k)}</div>
 
-  <div class="q"><span class="l">Tu hábito de la semana: ¿cuántos días lo cumpliste?<span class="ayuda">Es el hábito que te marqué en tu plantilla, en la caja «Tu hábito de la semana» (por ejemplo, 10-15 minutos de respiración por la nariz).</span></span>${escala('pieza',w.pieza,7)}<div class="extremos"><span>0 días</span><span>7 días</span></div></div>
+  <div class="q"><span class="l">Tus hábitos de la semana: ¿cuántos días los cumpliste?<span class="ayuda">Los que te marqué en tu plantilla, en la caja «Tus hábitos de la semana» (por ejemplo, levantarte cada rato que estás sentado o la respiración por la nariz). Cuenta los días en que los hiciste todos.</span></span>${escala('pieza',w.pieza,7)}<div class="extremos"><span>0 días</span><span>7 días</span></div></div>
   </section>`;
 }
 
@@ -426,7 +426,7 @@ function crearPDF(){
     titulo('Lo demás');
     fila('¿Algún brote esa semana?', w.brote);
     fila('¿Algo fuera del programa?', w.fuera.trim());
-    fila('Días que cumplió su hábito de la semana', w.pieza==null?'-':w.pieza+' de 7');
+    fila('Días que cumplió todos sus hábitos', w.pieza==null?'-':w.pieza+' de 7');
     if(si===sems.length-1) fila('Comentario', R.comentario.trim());
     registros.push({lunes:l, acts, act_cambio:w.p, act_cambio_aprox:w.p.map(k=>opc(k).v), dolor_medio:w.medio, peor:w.brote==='Sí'?w.peor:null, dias:w.dias, semana:sem, brote:w.brote, fuera:w.fuera.trim(), pieza:w.pieza, comentario:R.comentario.trim()});
   });

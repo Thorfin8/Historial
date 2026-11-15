@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Registro semanal · Lumbar de Acero</title>
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0E2652;--azul:#3A7AC4;--hielo:#EEF4FB;--linea:#D9E3F0;--texto:#1F2A3D;--gris:#5B6B82;--fondo:#F6F9FD;--blanco:#fff;--error:#C0392B;--verde:#2E9E5B;--ambar:#E0A21B;--rojo:#D2483C;}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{font-family:Poppins,system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--fondo);color:var(--texto);font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%;}
+.cab{background:var(--navy);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:5;}
+.cab img{width:34px;height:auto;}
+.cab .t1{font-size:11px;letter-spacing:2px;color:#9CC3EE;font-weight:600;margin:0;}
+.cab .t2{font-size:16px;font-weight:700;margin:0;line-height:1.2;}
+main{max-width:640px;margin:0 auto;padding:20px 16px 130px;}
+h1{font-size:23px;line-height:1.2;color:var(--navy);margin:4px 0 6px;}
+.paso{font-size:12px;font-weight:600;letter-spacing:1px;color:var(--azul);text-transform:uppercase;margin:0;}
+.intro{color:var(--gris);margin:0 0 16px;}
+.q{background:var(--blanco);border:1px solid var(--linea);border-radius:14px;padding:14px 14px 12px;margin:0 0 12px;}
+.q.err{border-color:var(--error);box-shadow:0 0 0 2px rgba(192,57,43,.12);}
+.l{display:block;font-weight:600;color:var(--navy);margin:0 0 8px;font-size:15.5px;}
+.ayuda{display:block;font-weight:400;color:var(--gris);font-size:13.5px;margin-top:2px;}
+.msg{display:none;color:var(--error);font-size:13px;margin-top:6px;}
+.q.err .msg{display:block;}
+input[type=text],textarea{width:100%;font:inherit;font-size:16px;padding:11px 12px;border:1.5px solid var(--linea);border-radius:10px;background:#fff;color:var(--texto);}
+textarea{min-height:84px;resize:vertical;}
+input:focus,textarea:focus{outline:none;border-color:var(--azul);}
+.escala{display:grid;grid-template-columns:repeat(11,1fr);gap:4px;}
+.escala button{height:42px;border:1.5px solid var(--linea);border-radius:9px;background:#fff;font:inherit;font-weight:600;font-size:15px;color:var(--navy);cursor:pointer;padding:0;}
+.escala button.on{background:var(--azul);border-color:var(--azul);color:#fff;}
+.escala.e8{grid-template-columns:repeat(8,1fr);}
+.extremos{display:flex;justify-content:space-between;font-size:12.5px;color:var(--gris);margin-top:5px;}
+.antes{font-size:12.5px;color:var(--gris);margin-top:4px;}
+.act{border-top:1px dashed var(--linea);padding-top:12px;margin-top:12px;}
+.act:first-of-type{border-top:0;padding-top:0;margin-top:0;}
+.act input{margin-bottom:8px;font-weight:600;}
+.chips{display:flex;flex-wrap:wrap;gap:6px;}
+.chips button{font:inherit;font-size:14.5px;font-weight:500;padding:9px 13px;border:1.5px solid var(--linea);border-radius:22px;background:#fff;color:var(--navy);cursor:pointer;}
+.chips button.on{background:var(--hielo);border-color:var(--azul);font-weight:600;}
+.dias{display:flex;flex-direction:column;gap:6px;}
+.dia{display:grid;grid-template-columns:44px 1fr;align-items:center;gap:8px;}
+.dia b{font-size:14px;color:var(--navy);}
+.dia .chips{flex-wrap:nowrap;gap:5px;}
+.dia .chips button{flex:1;padding:8px 0;font-size:13px;display:flex;align-items:center;justify-content:center;gap:5px;}
+.pt{width:11px;height:11px;border-radius:50%;display:inline-block;flex:none;}
+.dia .chips button.v.on{background:#E3F4EA;border-color:var(--verde);}
+.dia .chips button.a.on{background:#FCF1D8;border-color:var(--ambar);}
+.dia .chips button.r.on{background:#FBE4E1;border-color:var(--rojo);}
+.leyenda{font-size:12.5px;color:var(--gris);margin-top:8px;line-height:1.45;}
+.caja{background:var(--hielo);border-left:4px solid var(--azul);border-radius:10px;padding:12px 14px;margin:0 0 14px;font-size:15px;}
+.caja p{margin:0 0 6px;}.caja p:last-child{margin:0;}
+.pie{position:fixed;left:0;right:0;bottom:0;background:rgba(246,249,253,.97);border-top:1px solid var(--linea);padding:12px 16px calc(12px + env(safe-area-inset-bottom));}
+.pie .in{max-width:640px;margin:0 auto;}
+.btn{font:inherit;font-weight:600;font-size:16px;border-radius:12px;padding:13px 16px;border:0;cursor:pointer;width:100%;}
+.btn.wa{background:#1FA855;color:#fff;}
+.btn.lnk{background:none;color:var(--gris);text-decoration:underline;padding:8px 0;font-weight:500;font-size:14px;width:auto;}
+.btn[disabled]{opacity:.6;}
+.ok{font-size:44px;margin:10px 0 0;}
+.oculto{display:none !important;}
+</style>
+</head>
+<body>
+<header class="cab">
+  <img src="logo.png" alt="">
+  <div><p class="t1">VICTOR SANZ FISIO</p><p class="t2">Registro semanal · Lumbar de Acero</p></div>
+</header>
+<main id="main"></main>
+<div class="pie" id="pie"><div class="in"><button class="btn wa" id="enviar" type="button">Enviar a Victor por WhatsApp</button></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+/* ===== Ajustes ===== */
+const CLAVE = 'vsf_registro_v1';
+const DIAS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+const COLORES = {no:'No tocaba / no hice', v:'Verde', a:'Amarillo', r:'Rojo'};
+
+/* ===== Estado (solo en este móvil) ===== */
+let G = {nombre:'', acts:['','',''], ultima:null, borrador:null};
+try { const g = JSON.parse(localStorage.getItem(CLAVE)||'null'); if (g) G = Object.assign(G, g); } catch(e){}
+const guardar = () => { try { localStorage.setItem(CLAVE, JSON.stringify(G)); } catch(e){} };
+
+/* ===== La semana ===== */
+const iso = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const fcorta = d => d.toLocaleDateString('es-ES',{day:'numeric',month:'long'});
+function lunesDe(d){ const x=new Date(d); x.setHours(12,0,0,0); const w=(x.getDay()+6)%7; x.setDate(x.getDate()-w); return x; }
+function semanas(){
+  const hoy=new Date(), esta=lunesDe(hoy), pasada=new Date(esta); pasada.setDate(esta.getDate()-7);
+  const w=(hoy.getDay()+6)%7; // 0 lunes ... 6 domingo
+  return {esta, pasada, defecto: (w<=1 ? 'pasada' : 'esta')}; // lunes o martes: por defecto, la semana que acaba de terminar
+}
+function rango(lun){ const dom=new Date(lun); dom.setDate(lun.getDate()+6); return 'del '+fcorta(lun)+' al '+fcorta(dom); }
+
+/* ===== Respuestas de esta semana ===== */
+const S = semanas();
+let R = (G.borrador && G.borrador.lunes && (G.borrador.lunes===iso(S.esta) || G.borrador.lunes===iso(S.pasada))) ? G.borrador : null;
+if (!R) R = {cual:S.defecto, p:[null,null,null], medio:null, peor:null, dias:[null,null,null,null,null,null,null], brote:null, fuera:'', extra:null, extra_cual:'', pieza:null, comentario:''};
+R.lunes = iso(R.cual==='pasada'?S.pasada:S.esta);
+let enviado = false;
+const guardarR = () => { G.borrador = R; guardar(); };
+
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const U = G.ultima; // lo que mandó la semana anterior, para comparar
+
+function escala(id, val, max=10){ let h=`<div class="escala${max===7?' e8':''}" data-esc="${id}">`; for(let i=0;i<=max;i++) h+=`<button type="button" data-v="${i}" class="${val===i?'on':''}">${i}</button>`; return h+'</div>'; }
+function chips(id, ops, val){ return `<div class="chips" data-chip="${id}">`+ops.map(o=>`<button type="button" data-v="${esc(o)}" class="${val===o?'on':''}">${esc(o)}</button>`).join('')+'</div>'; }
+
+function pintar(){
+  const m=document.getElementById('main');
+  if (enviado){ m.innerHTML = `<p class="ok">✅</p><h1>¡Gracias!</h1><p class="intro">Si ya me ha llegado el PDF por WhatsApp, está todo. Lo leo el lunes y te digo si seguimos igual o cambiamos algo.</p>
+    <div class="caja"><p>La semana que viene, entra en este mismo enlace: tu nombre y tus 3 actividades ya estarán puestos.</p></div>
+    <button class="btn lnk" type="button" id="otra">Volver a enviarlo o cambiar algo</button>`;
+    document.getElementById('pie').classList.add('oculto');
+    document.getElementById('otra').onclick=()=>{ enviado=false; R=G.ultimaR||R; pintar(); };
+    return; }
+  document.getElementById('pie').classList.remove('oculto');
+  const ant = i => (U && U.p && U.p[i]!=null && G.acts[i]) ? `<div class="antes">La semana pasada: ${U.p[i]}</div>` : '';
+  m.innerHTML = `
+  <p class="paso">Cada domingo · 2 minutos</p>
+  <h1>Tu registro de la semana</h1>
+  <p class="intro">Con esto veo si vamos bien o hay que cambiar algo en tu plantilla. No hay respuestas buenas ni malas: pon lo que ha pasado de verdad.</p>
+
+  <div class="q" id="b_nombre"><label class="l" for="nombre">Tu nombre</label>
+    <input type="text" id="nombre" value="${esc(G.nombre)}" autocomplete="name"><div class="msg">Escribe tu nombre.</div></div>
+
+  <div class="q"><span class="l">¿De qué semana es este registro?</span>
+    ${chips('cual',['Esta semana','La semana pasada'], R.cual==='pasada'?'La semana pasada':'Esta semana')}
+    <span class="ayuda" style="margin-top:6px">${esc(rango(R.cual==='pasada'?S.pasada:S.esta))}</span></div>
+
+  <div class="q" id="b_p"><span class="l">Tus 3 actividades: ¿cómo las haces ahora?<span class="ayuda">0 = no puedo hacerla · 10 = la hago como antes del dolor. Son las que elegimos en la valoración.</span></span>
+    ${[0,1,2].map(i=>`<div class="act"><input type="text" id="act${i}" placeholder="Actividad ${i+1} (ej. caminar en llano)" value="${esc(G.acts[i])}">${escala('p'+i,R.p[i])}${ant(i)}</div>`).join('')}
+    <div class="extremos"><span>0 no puedo</span><span>10 como antes</span></div>
+    <div class="msg">Escribe las 3 actividades y ponles nota.</div></div>
+
+  <div class="q" id="b_medio"><span class="l">Tu dolor medio de la semana</span>${escala('medio',R.medio)}
+    <div class="extremos"><span>0 nada</span><span>10 el peor posible</span></div>${U&&U.medio!=null?`<div class="antes">La semana pasada: ${U.medio}</div>`:''}<div class="msg">Elige un número.</div></div>
+
+  <div class="q" id="b_peor"><span class="l">Tu peor momento de dolor de la semana</span>${escala('peor',R.peor)}
+    <div class="extremos"><span>0 nada</span><span>10 el peor posible</span></div><div class="msg">Elige un número.</div></div>
+
+  <div class="q" id="b_dias"><span class="l">Tu semana, día a día<span class="ayuda">Marca el color de cada día en que hiciste tu sesión. Si ese día no tocaba o no la hiciste, marca «—».</span></span>
+    <div class="dias">${DIAS.map((d,i)=>`<div class="dia"><b>${d}</b><div class="chips" data-dia="${i}">
+      <button type="button" class="${R.dias[i]==='no'?'on':''}" data-v="no">—</button>
+      <button type="button" class="v ${R.dias[i]==='v'?'on':''}" data-v="v"><span class="pt" style="background:var(--verde)"></span>Verde</button>
+      <button type="button" class="a ${R.dias[i]==='a'?'on':''}" data-v="a"><span class="pt" style="background:var(--ambar)"></span>Amarillo</button>
+      <button type="button" class="r ${R.dias[i]==='r'?'on':''}" data-v="r"><span class="pt" style="background:var(--rojo)"></span>Rojo</button></div></div>`).join('')}</div>
+    <p class="leyenda"><b>Verde</b>: 3/10 o menos, no sube mientras lo haces y al día siguiente igual o mejor. <b>Amarillo</b>: algo más cargado al día siguiente, se pasa en menos de 32 h. <b>Rojo</b>: pasa de 3, sube mientras lo haces o dura más de 32 h.</p>
+    <div class="msg">Marca todos los días (aunque sea con «—»).</div></div>
+
+  <div class="q" id="b_brote"><span class="l">¿Has tenido algún brote esta semana?</span>${chips('brote',['No','Sí'],R.brote)}<div class="msg">Elige una opción.</div></div>
+
+  <div class="q"><label class="l" for="fuera">¿Ha pasado algo fuera del programa?<span class="ayuda">Mucha carga en el trabajo, dormir mal, un viaje, un partido, estrés… Si ha salido algún rojo, cuéntamelo aquí.</span></label>
+    <textarea id="fuera">${esc(R.fuera)}</textarea></div>
+
+  <div class="q"><span class="l">¿Has usado las opciones extra?</span>${chips('extra',['No','La fácil ↓','La difícil ↑','Las dos'],R.extra)}
+    <input type="text" id="extra_cual" class="${R.extra&&R.extra!=='No'?'':'oculto'}" style="margin-top:8px" placeholder="¿En qué ejercicio? (su número)" value="${esc(R.extra_cual)}"></div>
+
+  <div class="q"><span class="l">¿Cuántos días has hecho tu pieza de la semana?<span class="ayuda">El hábito que te marqué en tu plantilla.</span></span>${escala('pieza',R.pieza,7)}</div>
+
+  <div class="q"><label class="l" for="comentario">¿Algo más que quieras contarme?</label><textarea id="comentario" placeholder="Cómo te has sentido, qué te ha costado, qué has notado…">${esc(R.comentario)}</textarea></div>
+
+  <div class="caja" id="ayudaEnvio"></div>`;
+  enlazar(); pintarAyuda();
+}
+
+const puedeCompartir = () => !!(navigator.canShare && window.File && navigator.canShare({files:[new File(['x'],'x.pdf',{type:'application/pdf'})]}));
+function pintarAyuda(){ const c=document.getElementById('ayudaEnvio'); if(!c) return;
+  c.innerHTML = puedeCompartir()
+   ? '<p>Cuando acabes, pulsa el botón verde. Se abrirá la opción de compartir: elige <strong>WhatsApp</strong> y después <strong>mi chat</strong>.</p>'
+   : '<p>Cuando acabes, pulsa el botón verde: se descargará un PDF. Después, en WhatsApp, entra en mi chat, pulsa el clip 📎 → <strong>Documento</strong> y elige ese PDF.</p>';
+  document.getElementById('enviar').textContent = puedeCompartir() ? 'Enviar a Victor por WhatsApp' : 'Descargar el PDF para enviarlo';
+}
+
+function enlazar(){
+  document.querySelectorAll('[data-esc]').forEach(el=>el.onclick=e=>{ const b=e.target.closest('button'); if(!b) return; const id=el.dataset.esc, v=+b.dataset.v;
+    if(id[0]==='p' && id.length===2) R.p[+id[1]]=v; else R[id]=v;
+    el.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); quitarErr(id[0]==='p'&&id.length===2?'p':id); guardarR(); });
+  document.querySelectorAll('[data-chip]').forEach(el=>el.onclick=e=>{ const b=e.target.closest('button'); if(!b) return; const id=el.dataset.chip, v=b.dataset.v;
+    if(id==='cual'){ R.cual = v==='La semana pasada'?'pasada':'esta'; R.lunes=iso(R.cual==='pasada'?S.pasada:S.esta); guardarR(); pintar(); return; }
+    R[id]=v; el.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); quitarErr(id);
+    if(id==='extra') document.getElementById('extra_cual').classList.toggle('oculto', v==='No'); guardarR(); });
+  document.querySelectorAll('[data-dia]').forEach(el=>el.onclick=e=>{ const b=e.target.closest('button'); if(!b) return; R.dias[+el.dataset.dia]=b.dataset.v;
+    el.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); if(R.dias.every(Boolean)) quitarErr('dias'); guardarR(); });
+  const t=(id,fn)=>{ const x=document.getElementById(id); if(x) x.oninput=()=>{ fn(x.value); guardar(); }; };
+  t('nombre',v=>{G.nombre=v; quitarErr('nombre');});
+  [0,1,2].forEach(i=>t('act'+i,v=>{G.acts[i]=v;}));
+  t('fuera',v=>{R.fuera=v; G.borrador=R;}); t('extra_cual',v=>{R.extra_cual=v; G.borrador=R;}); t('comentario',v=>{R.comentario=v; G.borrador=R;});
+}
+function quitarErr(id){ const b=document.getElementById('b_'+id); if(b) b.classList.remove('err'); }
+function validar(){
+  const mal=[];
+  if(!G.nombre.trim()) mal.push('nombre');
+  if(G.acts.some(a=>!a.trim()) || R.p.some(v=>v==null)) mal.push('p');
+  if(R.medio==null) mal.push('medio'); if(R.peor==null) mal.push('peor');
+  if(R.dias.some(v=>!v)) mal.push('dias'); if(!R.brote) mal.push('brote');
+  document.querySelectorAll('.q.err').forEach(x=>x.classList.remove('err'));
+  mal.forEach(id=>{ const b=document.getElementById('b_'+id); if(b) b.classList.add('err'); });
+  if(mal.length){ document.getElementById('b_'+mal[0]).scrollIntoView({behavior:'smooth',block:'center'}); return false; }
+  return true;
+}
+
+/* ===== Resumen de la semana (lo calcula la página; decide Victor) ===== */
+function resumenSemana(){
+  const hechos=R.dias.filter(d=>d&&d!=='no'), n=c=>hechos.filter(d=>d===c).length;
+  let txt; if(!hechos.length) txt='Sin sesiones marcadas';
+  else if(n('r')) txt='Algún día en rojo';
+  else if(n('a')) txt='Mezcla de verde y amarillo';
+  else txt='Toda en verde';
+  return {sesiones:hechos.length, verde:n('v'), amarillo:n('a'), rojo:n('r'), txt};
+}
+
+/* ===== PDF ===== */
+function crearPDF(){
+  const { jsPDF } = window.jspdf; const doc=new jsPDF({unit:'mm',format:'a4'});
+  const W=210, M=16, ancho=W-2*M, AZUL=[58,122,196], NAVY=[14,38,82], GRIS=[91,107,130], LINEA=[217,227,240];
+  const COL={v:[46,158,91], a:[224,162,27], r:[210,72,60]};
+  const limpio = s => String(s==null?'':s).replace(/[“”„]/g,'"').replace(/[‘’]/g,"'").replace(/[–—]/g,'-').replace(/…/g,'...').replace(/ ?[↓↑]/g,'').replace(/[^\u0000-ÿ€·¿¡]/g,'');
+  const ahora=new Date(), lun=new Date(R.lunes+'T12:00:00'), sem=resumenSemana();
+  const fecha=ahora.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+ahora.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+
+  doc.setFillColor(...NAVY); doc.rect(0,0,W,32,'F');
+  doc.setTextColor(156,195,238); doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.text('VICTOR SANZ FISIO · LUMBAR DE ACERO',M,11);
+  doc.setTextColor(255,255,255); doc.setFontSize(18); doc.text('Registro semanal',M,20);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.text(limpio(G.nombre.trim()+'   ·   Semana '+rango(lun)),M,27);
+  let y=42;
+  const titulo = t => { doc.setFont('helvetica','bold'); doc.setFontSize(11.5); doc.setTextColor(...AZUL); doc.text(limpio(t.toUpperCase()),M,y); y+=2; doc.setDrawColor(...LINEA); doc.line(M,y,W-M,y); y+=6; };
+  const barra = (etq, v, antes) => { // etiqueta, barra 0-10 y nota
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(...NAVY); doc.text(limpio(etq),M,y);
+    const x0=M+78, bw=70; doc.setFillColor(...LINEA); doc.roundedRect(x0,y-3.6,bw,4.4,2.2,2.2,'F');
+    if(v>0){ doc.setFillColor(...AZUL); doc.roundedRect(x0,y-3.6,bw*v/10,4.4,2.2,2.2,'F'); }
+    doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.text(String(v),x0+bw+5,y+0.4);
+    if(antes!=null){ const d=v-antes; doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...GRIS); doc.text(limpio('antes '+antes+(d? (d>0?'  (+'+d+')':'  ('+d+')') :'  (=)')),x0+bw+12,y+0.2); }
+    y+=8; };
+
+  titulo('Tus 3 actividades (0 no puedo · 10 como antes)');
+  [0,1,2].forEach(i=>{ const mismo = U && U.acts && U.acts[i]===G.acts[i].trim(); barra(G.acts[i].trim(), R.p[i], mismo&&U.p? U.p[i] : null); });
+  y+=2; titulo('Dolor (0 nada · 10 el peor posible)');
+  barra('Dolor medio de la semana', R.medio, U?U.medio:null);
+  barra('Peor momento de la semana', R.peor, U?U.peor:null);
+
+  y+=2; titulo('La semana, día a día');
+  const cw=ancho/7;
+  DIAS.forEach((d,i)=>{ const cx=M+cw*i+cw/2, c=R.dias[i];
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...GRIS); doc.text(limpio(d),cx,y,{align:'center'});
+    if(c && c!=='no'){ doc.setFillColor(...COL[c]); doc.circle(cx,y+7,4.2,'F'); doc.setTextColor(255,255,255); doc.setFontSize(8); doc.text({v:'V',a:'A',r:'R'}[c],cx,y+8.2,{align:'center'}); }
+    else { doc.setDrawColor(...LINEA); doc.setLineWidth(0.5); doc.circle(cx,y+7,4.2,'S'); doc.setLineWidth(0.2); doc.setTextColor(...GRIS); doc.setFontSize(9); doc.text('-',cx,y+8.2,{align:'center'}); }
+  });
+  y+=18;
+  doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor(...NAVY);
+  doc.text(limpio(sem.txt+'   ·   '+sem.sesiones+' sesiones: '+sem.verde+' verde, '+sem.amarillo+' amarillo, '+sem.rojo+' rojo'),M,y); y+=9;
+
+  titulo('Lo demás');
+  const fila=(p,r)=>{ const pl=doc.setFont('helvetica','normal').setFontSize(9).splitTextToSize(limpio(p),ancho), rl=doc.setFont('helvetica','bold').setFontSize(10.5).splitTextToSize(limpio(r||'-'),ancho);
+    if(y+pl.length*4+rl.length*5>282){ doc.addPage(); y=18; }
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...GRIS); doc.text(pl,M,y); y+=pl.length*4+0.5;
+    doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor(...NAVY); doc.text(rl,M,y); y+=rl.length*5+3; };
+  fila('¿Algún brote esta semana?', R.brote);
+  fila('¿Algo fuera del programa?', R.fuera.trim());
+  fila('Opciones extra', (R.extra||'-')+(R.extra&&R.extra!=='No'&&R.extra_cual.trim()?' · ejercicio '+R.extra_cual.trim():''));
+  fila('Días con su pieza de la semana', R.pieza==null?'-':R.pieza+' de 7');
+  fila('Comentario', R.comentario.trim());
+
+  const n=doc.getNumberOfPages();
+  for(let i=1;i<=n;i++){ doc.setPage(i); doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(138,151,171);
+    doc.text(limpio('Enviado el '+fecha+' · Confidencial: contiene datos de salud. Solo para Victor Sanz Fisio.'),M,290); doc.text(i+' / '+n,W-M,290,{align:'right'}); }
+
+  // Datos en bruto dentro del PDF, para que el cerebro los lea sin teclear nada
+  const datos={v:1, tipo:'registro_semanal', lunes:R.lunes, enviado:ahora.toISOString(), acts:G.acts.map(a=>a.trim()), psfs:R.p, dolor_medio:R.medio, peor:R.peor, dias:R.dias, semana:sem, brote:R.brote, fuera:R.fuera.trim(), extra:R.extra, extra_cual:R.extra_cual.trim(), pieza:R.pieza, comentario:R.comentario.trim()};
+  doc.setProperties({title:'Registro semanal', subject:'VSF_REGISTRO '+JSON.stringify(datos).replace(/[\u007f-￿]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0')), creator:'Victor Sanz Fisio'});
+
+  const base=G.nombre.trim().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'')||'paciente';
+  return {doc, nombre:`Registro_${base}_${R.lunes}.pdf`};
+}
+
+async function enviar(){
+  if(!validar()) return;
+  const btn=document.getElementById('enviar'); btn.disabled=true;
+  try{
+    const {doc,nombre}=crearPDF();
+    const blob=doc.output('blob'), file=new File([blob],nombre,{type:'application/pdf'});
+    let ok=false;
+    if (puedeCompartir() && navigator.canShare({files:[file]})) {
+      try { await navigator.share({files:[file], title:'Mi registro semanal'}); ok=true; }
+      catch(e){ if(e.name!=='AbortError'){ doc.save(nombre); ok=true; } }
+    } else { doc.save(nombre); ok=true; }
+    if(ok){ // se guarda para comparar la semana que viene y se limpia el borrador
+      G.ultima={lunes:R.lunes, acts:G.acts.map(a=>a.trim()), p:R.p.slice(), medio:R.medio, peor:R.peor};
+      G.ultimaR=JSON.parse(JSON.stringify(R)); G.borrador=null; guardar(); enviado=true; window.scrollTo(0,0);
+    }
+  } catch(e){ alert('No se ha podido crear el PDF. Prueba de nuevo o escríbeme por WhatsApp.'); }
+  btn.disabled=false; pintar();
+}
+document.getElementById('enviar').onclick=enviar;
+pintar();
+</script>
+</body>
+</html>

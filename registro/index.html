@@ -73,6 +73,12 @@ input:focus,textarea:focus{outline:none;border-color:var(--azul);}
 .bloque h2{font-size:19px;color:var(--navy);margin:6px 0 12px;line-height:1.25;}
 .bloque h2 span{display:block;font-size:12px;letter-spacing:1px;color:var(--azul);text-transform:uppercase;}
 .dia b small{display:block;font-weight:500;color:var(--gris);font-size:11.5px;line-height:1;}
+.opc{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.opc button{font:inherit;text-align:left;padding:8px 10px;border:1.5px solid var(--linea);border-radius:10px;background:#fff;color:var(--navy);cursor:pointer;display:flex;gap:8px;align-items:center;line-height:1.2;}
+.opc button .pt{width:14px;height:14px;}
+.opc button b{font-size:14px;font-weight:600;display:block;}
+.opc button small{font-size:11.5px;color:var(--gris);}
+.opc button.on{border-width:2px;box-shadow:0 0 0 2px rgba(58,122,196,.12);}
 </style>
 </head>
 <body>
@@ -89,6 +95,16 @@ input:focus,textarea:focus{outline:none;border-color:var(--azul);}
 const CLAVE = 'vsf_registro_v2';
 const DIAS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
 const MAX_SEMANAS = 2;
+/* Cómo hace cada actividad comparado con el día de la valoración. n = cambio aproximado en la escala 0-10 */
+const OPC = [
+ {k:'mp',  t:'Mucho peor',    n:'-3 puntos o más', c:'#D2483C', v:-3},
+ {k:'pp',  t:'Un poco peor',  n:'-1 a -2 puntos',          c:'#EE8A2E', v:-1.5},
+ {k:'ig',  t:'Estoy igual',   n:'la misma nota',           c:'#E0B21B', v:0},
+ {k:'pm',  t:'Un poco mejor', n:'+1 a +2 puntos',            c:'#93C46B', v:1.5},
+ {k:'mm',  t:'Mucho mejor',   n:'+3 puntos o más',        c:'#2E9E5B', v:3},
+ {k:'100', t:'Al 100 %',      n:'10 de 10, como antes', c:'#1B6E3E', v:10},
+];
+const opc = k => OPC.find(o=>o.k===k);
 
 /* ===== Lo que se recuerda en este móvil ===== */
 let G = {nombre:'', acts:['','',''], hist:{}, borrador:null};
@@ -129,7 +145,7 @@ const nuevaSemana = () => ({p:[null,null,null], medio:null, peor:null, dias:[nul
 let R = G.borrador && Array.isArray(G.borrador.sel) ? G.borrador : null;
 if (R) R.sel = R.sel.filter(l=>SEMANAS.includes(l) && !futura(l));
 if (!R || !R.sel.length) R = {sel:[DEFECTO], w:{}, comentario: R?R.comentario:''};
-R.sel.forEach(l=>{ if(!R.w[l]) R.w[l]=nuevaSemana(); });
+R.sel.forEach(l=>{ if(!R.w[l]) R.w[l]=nuevaSemana(); R.w[l].p=R.w[l].p.map(v=>typeof v==='string'?v:null); });
 let enviado=false, ultimoEnvio=null;
 const guardarR = () => { G.borrador=R; guardar(); };
 const ordenadas = () => R.sel.slice().sort();
@@ -148,14 +164,13 @@ function chips(id, ops, val){ return `<div class="chips" data-chip="${id}">`+ops
 
 function bloqueSemana(l, n, total){
   const w=R.w[l], U=previa(l), k=l; // k = clave de la semana en los data-*
-  const ant = (i) => (U && U.p && U.p[i]!=null && U.acts && U.acts[i]===G.acts[i].trim()) ? `<div class="antes">${U.mismoEnvio?'La semana anterior':'La última vez'}: ${U.p[i]}</div>` : '';
+  const ant = (i) => (U && U.p && U.p[i]!=null && U.acts && U.acts[i]===G.acts[i].trim()) ? `<div class="antes">${U.mismoEnvio?'La semana anterior':'La última vez'}: ${esc(opc(U.p[i])?opc(U.p[i]).t:U.p[i]+'/10')}</div>` : '';
   return `<section class="bloque" data-sem="${k}">
   <h2>${total>1?`<span>Semana ${n} de ${total}</span>`:''}Semana ${esc(rango(l))}</h2>
 
-  <div class="q" id="b_p_${k}"><span class="l">Tus 3 actividades: ¿cómo las haces ahora?<span class="ayuda">0 = no puedo hacerla · 10 = la hago como antes del dolor.</span></span>
-    ${[0,1,2].map(i=>`<div class="act"><span class="l" style="font-size:14.5px;margin:0 0 6px">${esc(G.acts[i].trim()||'Actividad '+(i+1))}</span>${escala('p'+i,w.p[i])}${ant(i)}</div>`).join('')}
-    <div class="extremos"><span>0 no puedo</span><span>10 como antes</span></div>
-    <div class="msg">Pon nota a las 3 actividades.</div></div>
+  <div class="q" id="b_p_${k}"><span class="l">Tus 3 actividades: ¿cómo las haces comparado con cuando empezamos?<span class="ayuda">Compáralo con cómo estabas el día de la valoración. Debajo de cada opción tienes a cuánto equivale, más o menos, en la nota del 0 (no puedo hacerla) al 10 (como antes del dolor).</span></span>
+    ${[0,1,2].map(i=>`<div class="act"><span class="l" style="font-size:14.5px;margin:0 0 6px">${esc(G.acts[i].trim()||'Actividad '+(i+1))}</span><div class="opc" data-opc="${i}">${OPC.map(o=>`<button type="button" data-v="${o.k}" class="${w.p[i]===o.k?'on':''}" style="${w.p[i]===o.k?`border-color:${o.c};background:${o.c}1A`:''}"><span class="pt" style="background:${o.c}"></span><span><b>${o.t}</b><small>≈ ${o.n}</small></span></button>`).join('')}</div>${ant(i)}</div>`).join('')}
+    <div class="msg">Elige una opción en las 3 actividades.</div></div>
 
   <div class="q" id="b_medio_${k}"><span class="l">Tu dolor medio de esa semana</span>${escala('medio',w.medio)}
     <div class="extremos"><span>0 nada</span><span>10 el peor posible</span></div>${U&&U.medio!=null?`<div class="antes">${U.mismoEnvio?'La semana anterior':'La última vez'}: ${U.medio}</div>`:''}<div class="msg">Elige un número.</div></div>
@@ -180,7 +195,7 @@ function bloqueSemana(l, n, total){
   <div class="q"><span class="l">¿Usaste las opciones extra?</span>${chips('extra',['No','La fácil ↓','La difícil ↑','Las dos'],w.extra)}
     <input type="text" data-txt="extra_cual" class="${w.extra&&w.extra!=='No'?'':'oculto'}" style="margin-top:8px" placeholder="¿En qué ejercicio? (su número)" value="${esc(w.extra_cual)}"></div>
 
-  <div class="q"><span class="l">¿Cuántos días hiciste tu pieza de la semana?<span class="ayuda">El hábito que te marqué en tu plantilla.</span></span>${escala('pieza',w.pieza,7)}</div>
+  <div class="q"><span class="l">Tu hábito de la semana: ¿cuántos días lo cumpliste?<span class="ayuda">Es el hábito que te marqué en tu plantilla, en la caja «Tu hábito de la semana» (por ejemplo, 10-15 minutos de respiración por la nariz). Marca de 0 a 7 días.</span></span>${escala('pieza',w.pieza,7)}</div>
   </section>`;
 }
 
@@ -236,6 +251,9 @@ function enlazar(){
     sec.querySelectorAll('[data-esc]').forEach(el=>el.onclick=e=>{ const b=e.target.closest('button'); if(!b) return; const id=el.dataset.esc, v=+b.dataset.v;
       if(/^p\d$/.test(id)) w.p[+id[1]]=v; else w[id]=v;
       el.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); quitarErr((/^p\d$/.test(id)?'p':id)+'_'+l); guardarR(); });
+    sec.querySelectorAll('[data-opc]').forEach(el=>el.onclick=e=>{ const b=e.target.closest('button'); if(!b) return; w.p[+el.dataset.opc]=b.dataset.v;
+      el.querySelectorAll('button').forEach(x=>{ const o=opc(x.dataset.v), on=x===b; x.classList.toggle('on',on); x.style.borderColor=on?o.c:''; x.style.background=on?o.c+'1A':''; });
+      if(w.p.every(v=>v!=null)) quitarErr('p_'+l); guardarR(); });
     sec.querySelectorAll('[data-chip]').forEach(el=>el.onclick=e=>{ const b=e.target.closest('button'); if(!b) return; const id=el.dataset.chip; w[id]=b.dataset.v;
       el.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); quitarErr(id+'_'+l);
       if(id==='extra') sec.querySelector('[data-txt="extra_cual"]').classList.toggle('oculto', w.extra==='No'); guardarR(); });
@@ -308,8 +326,15 @@ function crearPDF(){
     cabecera();
     const w=R.w[l], U=previa(l), sem=resumenSemana(w);
     doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(...NAVY); doc.text(limpio((sems.length>1?'Semana '+(si+1)+' de '+sems.length+' · ':'')+rango(l)),M,y); y+=9;
-    titulo('Tus 3 actividades (0 no puedo · 10 como antes)');
-    [0,1,2].forEach(i=>barra(acts[i], w.p[i], (U&&U.p&&U.acts&&U.acts[i]===acts[i])?U.p[i]:null));
+    titulo('Tus 3 actividades, comparado con el día de la valoración');
+    [0,1,2].forEach(i=>{ const o=opc(w.p[i]), h=o.c.match(/\w\w/g).map(x=>parseInt(x,16));
+      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(...NAVY); doc.text(limpio(acts[i]),M,y);
+      const x0=M+78; doc.setFillColor(...h); doc.roundedRect(x0,y-4.2,34,5.8,2.9,2.9,'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(255,255,255); doc.text(limpio(o.t),x0+17,y,{align:'center'});
+      const prev=(U&&U.p&&U.acts&&U.acts[i]===acts[i])?U.p[i]:null;
+      doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...GRIS);
+      doc.text(limpio('aprox. '+o.n+(prev!=null?'   ·   antes: '+(opc(prev)?opc(prev).t:prev+'/10'):'')),x0+37,y-0.2);
+      y+=8; });
     y+=1.5; titulo('Dolor (0 nada · 10 el peor posible)');
     barra('Dolor medio de la semana', w.medio, U?U.medio:null);
     barra('Peor momento de la semana', w.peor, U?U.peor:null);
@@ -326,9 +351,9 @@ function crearPDF(){
     fila('¿Algún brote esa semana?', w.brote);
     fila('¿Algo fuera del programa?', w.fuera.trim());
     fila('Opciones extra', (w.extra||'-')+(w.extra&&w.extra!=='No'&&w.extra_cual.trim()?' · ejercicio '+w.extra_cual.trim():''));
-    fila('Días con su pieza de la semana', w.pieza==null?'-':w.pieza+' de 7');
+    fila('Días que cumplió su hábito de la semana', w.pieza==null?'-':w.pieza+' de 7');
     if(si===sems.length-1) fila('Comentario', R.comentario.trim());
-    registros.push({lunes:l, acts, psfs:w.p, dolor_medio:w.medio, peor:w.peor, dias:w.dias, semana:sem, brote:w.brote, fuera:w.fuera.trim(), extra:w.extra, extra_cual:w.extra_cual.trim(), pieza:w.pieza, comentario:R.comentario.trim()});
+    registros.push({lunes:l, acts, act_cambio:w.p, act_cambio_aprox:w.p.map(k=>opc(k).v), dolor_medio:w.medio, peor:w.peor, dias:w.dias, semana:sem, brote:w.brote, fuera:w.fuera.trim(), extra:w.extra, extra_cual:w.extra_cual.trim(), pieza:w.pieza, comentario:R.comentario.trim()});
   });
 
   const n=doc.getNumberOfPages();
@@ -336,7 +361,7 @@ function crearPDF(){
     doc.text(limpio('Enviado el '+fecha+' · Confidencial: contiene datos de salud. Solo para Victor Sanz Fisio.'),M,290); doc.text(i+' / '+n,W-M,290,{align:'right'}); }
 
   // Datos en bruto dentro del PDF, para que el cerebro los lea sin teclear nada
-  const datos={v:2, tipo:'registro_semanal', enviado:ahora.toISOString(), registros};
+  const datos={v:3, tipo:'registro_semanal', enviado:ahora.toISOString(), registros};
   doc.setProperties({title:'Registro semanal', subject:'VSF_REGISTRO '+JSON.stringify(datos).replace(/[\u007f-￿]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0')), creator:'Victor Sanz Fisio'});
 
   const base=G.nombre.trim().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'')||'paciente';

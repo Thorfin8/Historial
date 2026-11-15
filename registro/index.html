@@ -63,6 +63,16 @@ input:focus,textarea:focus{outline:none;border-color:var(--azul);}
 .btn[disabled]{opacity:.6;}
 .ok{font-size:44px;margin:10px 0 0;}
 .oculto{display:none !important;}
+.semanas{display:flex;flex-direction:column;gap:6px;}
+.semanas button{font:inherit;font-size:15px;text-align:left;padding:10px 12px;border:1.5px solid var(--linea);border-radius:10px;background:#fff;color:var(--navy);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.semanas button.on{background:var(--hielo);border-color:var(--azul);font-weight:600;}
+.semanas button[disabled]{opacity:.45;cursor:default;}
+.semanas small{font-size:12.5px;color:var(--gris);font-weight:500;white-space:nowrap;}
+.semanas small.env{color:var(--verde);}
+.bloque{border-top:3px solid var(--azul);padding-top:6px;margin:22px 0 0;}
+.bloque h2{font-size:19px;color:var(--navy);margin:6px 0 12px;line-height:1.25;}
+.bloque h2 span{display:block;font-size:12px;letter-spacing:1px;color:var(--azul);text-transform:uppercase;}
+.dia b small{display:block;font-weight:500;color:var(--gris);font-size:11.5px;line-height:1;}
 </style>
 </head>
 <body>
@@ -76,50 +86,114 @@ input:focus,textarea:focus{outline:none;border-color:var(--azul);}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 /* ===== Ajustes ===== */
-const CLAVE = 'vsf_registro_v1';
+const CLAVE = 'vsf_registro_v2';
 const DIAS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
-const COLORES = {no:'No tocaba / no hice', v:'Verde', a:'Amarillo', r:'Rojo'};
+const MAX_SEMANAS = 2;
 
-/* ===== Estado (solo en este móvil) ===== */
-let G = {nombre:'', acts:['','',''], ultima:null, borrador:null};
+/* ===== Lo que se recuerda en este móvil ===== */
+let G = {nombre:'', acts:['','',''], hist:{}, borrador:null};
 try { const g = JSON.parse(localStorage.getItem(CLAVE)||'null'); if (g) G = Object.assign(G, g); } catch(e){}
+try { // registro de la versión anterior: se aprovecha nombre y actividades
+  const v1 = JSON.parse(localStorage.getItem('vsf_registro_v1')||'null');
+  if (v1 && !G.nombre) { G.nombre=v1.nombre||''; G.acts=v1.acts||G.acts; if(v1.ultima) G.hist[v1.ultima.lunes]={p:v1.ultima.p,medio:v1.ultima.medio,peor:v1.ultima.peor,acts:v1.ultima.acts}; }
+} catch(e){}
 const guardar = () => { try { localStorage.setItem(CLAVE, JSON.stringify(G)); } catch(e){} };
 
-/* ===== La semana ===== */
+/* ===== Fechas ===== */
 const iso = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-const fcorta = d => d.toLocaleDateString('es-ES',{day:'numeric',month:'long'});
-function lunesDe(d){ const x=new Date(d); x.setHours(12,0,0,0); const w=(x.getDay()+6)%7; x.setDate(x.getDate()-w); return x; }
-function semanas(){
-  const hoy=new Date(), esta=lunesDe(hoy), pasada=new Date(esta); pasada.setDate(esta.getDate()-7);
-  const w=(hoy.getDay()+6)%7; // 0 lunes ... 6 domingo
-  return {esta, pasada, defecto: (w<=1 ? 'pasada' : 'esta')}; // lunes o martes: por defecto, la semana que acaba de terminar
-}
-function rango(lun){ const dom=new Date(lun); dom.setDate(lun.getDate()+6); return 'del '+fcorta(lun)+' al '+fcorta(dom); }
+const deIso = s => new Date(s+'T12:00:00');
+const mas = (d,n) => { const x=new Date(d); x.setDate(x.getDate()+n); return x; };
+const fcorta = d => d.toLocaleDateString('es-ES',{day:'numeric',month:'short'}).replace('.','');
+const flarga = d => d.toLocaleDateString('es-ES',{day:'numeric',month:'long'});
+function lunesDe(d){ const x=new Date(d); x.setHours(12,0,0,0); x.setDate(x.getDate()-((x.getDay()+6)%7)); return x; }
+function rango(l){ return 'del '+flarga(deIso(l))+' al '+flarga(mas(deIso(l),6)); }
+const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 
-/* ===== Respuestas de esta semana ===== */
-const S = semanas();
-let R = (G.borrador && G.borrador.lunes && (G.borrador.lunes===iso(S.esta) || G.borrador.lunes===iso(S.pasada))) ? G.borrador : null;
-if (!R) R = {cual:S.defecto, p:[null,null,null], medio:null, peor:null, dias:[null,null,null,null,null,null,null], brote:null, fuera:'', extra:null, extra_cual:'', pieza:null, comentario:''};
-R.lunes = iso(R.cual==='pasada'?S.pasada:S.esta);
-let enviado = false;
-const guardarR = () => { G.borrador = R; guardar(); };
+/* Semanas del mes de hoy (de lunes a domingo, las que tocan el mes) + la anterior si el mes acaba de empezar */
+const HOY = new Date(); HOY.setHours(12,0,0,0);
+const ESTA = iso(lunesDe(HOY));
+function semanasDelMes(){
+  const ini=new Date(HOY.getFullYear(),HOY.getMonth(),1,12), fin=new Date(HOY.getFullYear(),HOY.getMonth()+1,0,12);
+  const lista=[]; for(let l=lunesDe(ini); l<=fin; l=mas(l,7)) lista.push(iso(l));
+  const pasada=iso(mas(lunesDe(HOY),-7)); if(!lista.includes(pasada)) lista.unshift(pasada);
+  return lista;
+}
+const SEMANAS = semanasDelMes();
+const futura = l => l > ESTA;
+const enviada = l => !!G.hist[l];
+// Por defecto: la semana que se cierra (de viernes a domingo, esta; de lunes a jueves, la pasada)
+const DEFECTO = ((HOY.getDay()+6)%7)>=4 ? ESTA : iso(mas(lunesDe(HOY),-7));
+
+/* ===== Respuestas ===== */
+const nuevaSemana = () => ({p:[null,null,null], medio:null, peor:null, dias:[null,null,null,null,null,null,null], brote:null, fuera:'', extra:null, extra_cual:'', pieza:null});
+let R = G.borrador && Array.isArray(G.borrador.sel) ? G.borrador : null;
+if (R) R.sel = R.sel.filter(l=>SEMANAS.includes(l) && !futura(l));
+if (!R || !R.sel.length) R = {sel:[DEFECTO], w:{}, comentario: R?R.comentario:''};
+R.sel.forEach(l=>{ if(!R.w[l]) R.w[l]=nuevaSemana(); });
+let enviado=false, ultimoEnvio=null;
+const guardarR = () => { G.borrador=R; guardar(); };
+const ordenadas = () => R.sel.slice().sort();
 
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const U = G.ultima; // lo que mandó la semana anterior, para comparar
+/* La semana anterior enviada (o la anterior de este mismo envío) para comparar */
+function previa(l){
+  const antes = Object.keys(G.hist).filter(k=>k<l).sort().pop();
+  const enEste = ordenadas().filter(k=>k<l).pop();
+  if (enEste && (!antes || enEste>antes)) { const w=R.w[enEste]; return {p:w.p, medio:w.medio, peor:w.peor, acts:G.acts.map(a=>a.trim()), mismoEnvio:true}; }
+  return antes ? G.hist[antes] : null;
+}
 
 function escala(id, val, max=10){ let h=`<div class="escala${max===7?' e8':''}" data-esc="${id}">`; for(let i=0;i<=max;i++) h+=`<button type="button" data-v="${i}" class="${val===i?'on':''}">${i}</button>`; return h+'</div>'; }
 function chips(id, ops, val){ return `<div class="chips" data-chip="${id}">`+ops.map(o=>`<button type="button" data-v="${esc(o)}" class="${val===o?'on':''}">${esc(o)}</button>`).join('')+'</div>'; }
 
+function bloqueSemana(l, n, total){
+  const w=R.w[l], U=previa(l), k=l; // k = clave de la semana en los data-*
+  const ant = (i) => (U && U.p && U.p[i]!=null && U.acts && U.acts[i]===G.acts[i].trim()) ? `<div class="antes">${U.mismoEnvio?'La semana anterior':'La última vez'}: ${U.p[i]}</div>` : '';
+  return `<section class="bloque" data-sem="${k}">
+  <h2>${total>1?`<span>Semana ${n} de ${total}</span>`:''}Semana ${esc(rango(l))}</h2>
+
+  <div class="q" id="b_p_${k}"><span class="l">Tus 3 actividades: ¿cómo las haces ahora?<span class="ayuda">0 = no puedo hacerla · 10 = la hago como antes del dolor.</span></span>
+    ${[0,1,2].map(i=>`<div class="act"><span class="l" style="font-size:14.5px;margin:0 0 6px">${esc(G.acts[i].trim()||'Actividad '+(i+1))}</span>${escala('p'+i,w.p[i])}${ant(i)}</div>`).join('')}
+    <div class="extremos"><span>0 no puedo</span><span>10 como antes</span></div>
+    <div class="msg">Pon nota a las 3 actividades.</div></div>
+
+  <div class="q" id="b_medio_${k}"><span class="l">Tu dolor medio de esa semana</span>${escala('medio',w.medio)}
+    <div class="extremos"><span>0 nada</span><span>10 el peor posible</span></div>${U&&U.medio!=null?`<div class="antes">${U.mismoEnvio?'La semana anterior':'La última vez'}: ${U.medio}</div>`:''}<div class="msg">Elige un número.</div></div>
+
+  <div class="q" id="b_peor_${k}"><span class="l">Tu peor momento de dolor de esa semana</span>${escala('peor',w.peor)}
+    <div class="extremos"><span>0 nada</span><span>10 el peor posible</span></div><div class="msg">Elige un número.</div></div>
+
+  <div class="q" id="b_dias_${k}"><span class="l">Día a día<span class="ayuda">El color de cada día en que hiciste tu sesión. Si no tocaba o no la hiciste, «—».</span></span>
+    <div class="dias">${DIAS.map((d,i)=>{ const f=mas(deIso(l),i), fut=f>HOY; return `<div class="dia"><b>${d}<small>${f.getDate()}</small></b><div class="chips" data-dia="${i}">
+      <button type="button" class="${w.dias[i]==='no'?'on':''}" data-v="no">—</button>
+      <button type="button" class="v ${w.dias[i]==='v'?'on':''}" data-v="v" ${fut?'disabled':''}><span class="pt" style="background:var(--verde)"></span>Verde</button>
+      <button type="button" class="a ${w.dias[i]==='a'?'on':''}" data-v="a" ${fut?'disabled':''}><span class="pt" style="background:var(--ambar)"></span>Amarillo</button>
+      <button type="button" class="r ${w.dias[i]==='r'?'on':''}" data-v="r" ${fut?'disabled':''}><span class="pt" style="background:var(--rojo)"></span>Rojo</button></div></div>`; }).join('')}</div>
+    ${n===1?`<p class="leyenda"><b>Verde</b>: 3/10 o menos, no sube mientras lo haces y al día siguiente igual o mejor. <b>Amarillo</b>: algo más cargado al día siguiente, se pasa en menos de 32 h. <b>Rojo</b>: pasa de 3, sube mientras lo haces o dura más de 32 h.</p>`:''}
+    <div class="msg">Marca todos los días (aunque sea con «—»).</div></div>
+
+  <div class="q" id="b_brote_${k}"><span class="l">¿Tuviste algún brote esa semana?</span>${chips('brote',['No','Sí'],w.brote)}<div class="msg">Elige una opción.</div></div>
+
+  <div class="q"><span class="l">¿Pasó algo fuera del programa?<span class="ayuda">Mucha carga en el trabajo, dormir mal, un viaje, un partido, estrés… Si salió algún rojo, cuéntamelo aquí.</span></span>
+    <textarea data-txt="fuera">${esc(w.fuera)}</textarea></div>
+
+  <div class="q"><span class="l">¿Usaste las opciones extra?</span>${chips('extra',['No','La fácil ↓','La difícil ↑','Las dos'],w.extra)}
+    <input type="text" data-txt="extra_cual" class="${w.extra&&w.extra!=='No'?'':'oculto'}" style="margin-top:8px" placeholder="¿En qué ejercicio? (su número)" value="${esc(w.extra_cual)}"></div>
+
+  <div class="q"><span class="l">¿Cuántos días hiciste tu pieza de la semana?<span class="ayuda">El hábito que te marqué en tu plantilla.</span></span>${escala('pieza',w.pieza,7)}</div>
+  </section>`;
+}
+
 function pintar(){
   const m=document.getElementById('main');
   if (enviado){ m.innerHTML = `<p class="ok">✅</p><h1>¡Gracias!</h1><p class="intro">Si ya me ha llegado el PDF por WhatsApp, está todo. Lo leo el lunes y te digo si seguimos igual o cambiamos algo.</p>
-    <div class="caja"><p>La semana que viene, entra en este mismo enlace: tu nombre y tus 3 actividades ya estarán puestos.</p></div>
+    <div class="caja"><p>La próxima vez, entra en este mismo enlace: tu nombre y tus 3 actividades ya estarán puestos.</p></div>
     <button class="btn lnk" type="button" id="otra">Volver a enviarlo o cambiar algo</button>`;
     document.getElementById('pie').classList.add('oculto');
-    document.getElementById('otra').onclick=()=>{ enviado=false; R=G.ultimaR||R; pintar(); };
+    document.getElementById('otra').onclick=()=>{ enviado=false; R=ultimoEnvio; pintar(); };
     return; }
   document.getElementById('pie').classList.remove('oculto');
-  const ant = i => (U && U.p && U.p[i]!=null && G.acts[i]) ? `<div class="antes">La semana pasada: ${U.p[i]}</div>` : '';
+  const tot=ordenadas().length;
   m.innerHTML = `
   <p class="paso">Cada domingo · 2 minutos</p>
   <h1>Tu registro de la semana</h1>
@@ -128,41 +202,18 @@ function pintar(){
   <div class="q" id="b_nombre"><label class="l" for="nombre">Tu nombre</label>
     <input type="text" id="nombre" value="${esc(G.nombre)}" autocomplete="name"><div class="msg">Escribe tu nombre.</div></div>
 
-  <div class="q"><span class="l">¿De qué semana es este registro?</span>
-    ${chips('cual',['Esta semana','La semana pasada'], R.cual==='pasada'?'La semana pasada':'Esta semana')}
-    <span class="ayuda" style="margin-top:6px">${esc(rango(R.cual==='pasada'?S.pasada:S.esta))}</span></div>
+  <div class="q" id="b_sel"><span class="l">¿Qué semana registras?<span class="ayuda">Si se te pasó un domingo, marca también la otra: puedes mandarme dos semanas a la vez.</span></span>
+    <div class="semanas">${SEMANAS.map(l=>{ const on=R.sel.includes(l), fut=futura(l); const nota = fut?'aún no':(enviada(l)?'✓ ya enviada':(l===ESTA?'esta semana':''));
+      return `<button type="button" data-semana="${l}" class="${on?'on':''}" ${fut?'disabled':''}><span>${on?'☑':'☐'} ${fcorta(deIso(l))} – ${fcorta(mas(deIso(l),6))}</span><small class="${enviada(l)&&!fut?'env':''}">${nota}</small></button>`; }).join('')}</div>
+    <div class="msg">Marca al menos una semana.</div></div>
 
-  <div class="q" id="b_p"><span class="l">Tus 3 actividades: ¿cómo las haces ahora?<span class="ayuda">0 = no puedo hacerla · 10 = la hago como antes del dolor. Son las que elegimos en la valoración.</span></span>
-    ${[0,1,2].map(i=>`<div class="act"><input type="text" id="act${i}" placeholder="Actividad ${i+1} (ej. caminar en llano)" value="${esc(G.acts[i])}">${escala('p'+i,R.p[i])}${ant(i)}</div>`).join('')}
-    <div class="extremos"><span>0 no puedo</span><span>10 como antes</span></div>
-    <div class="msg">Escribe las 3 actividades y ponles nota.</div></div>
+  <div class="q" id="b_acts"><span class="l">Tus 3 actividades<span class="ayuda">Las que elegimos en la valoración. Se quedan guardadas para la próxima vez.</span></span>
+    ${[0,1,2].map(i=>`<input type="text" id="act${i}" style="margin-top:${i?8:0}px;font-weight:600" placeholder="Actividad ${i+1} (ej. caminar en llano)" value="${esc(G.acts[i])}">`).join('')}
+    <div class="msg">Escribe las 3 actividades.</div></div>
 
-  <div class="q" id="b_medio"><span class="l">Tu dolor medio de la semana</span>${escala('medio',R.medio)}
-    <div class="extremos"><span>0 nada</span><span>10 el peor posible</span></div>${U&&U.medio!=null?`<div class="antes">La semana pasada: ${U.medio}</div>`:''}<div class="msg">Elige un número.</div></div>
+  ${ordenadas().map((l,i)=>bloqueSemana(l,i+1,tot)).join('')}
 
-  <div class="q" id="b_peor"><span class="l">Tu peor momento de dolor de la semana</span>${escala('peor',R.peor)}
-    <div class="extremos"><span>0 nada</span><span>10 el peor posible</span></div><div class="msg">Elige un número.</div></div>
-
-  <div class="q" id="b_dias"><span class="l">Tu semana, día a día<span class="ayuda">Marca el color de cada día en que hiciste tu sesión. Si ese día no tocaba o no la hiciste, marca «—».</span></span>
-    <div class="dias">${DIAS.map((d,i)=>`<div class="dia"><b>${d}</b><div class="chips" data-dia="${i}">
-      <button type="button" class="${R.dias[i]==='no'?'on':''}" data-v="no">—</button>
-      <button type="button" class="v ${R.dias[i]==='v'?'on':''}" data-v="v"><span class="pt" style="background:var(--verde)"></span>Verde</button>
-      <button type="button" class="a ${R.dias[i]==='a'?'on':''}" data-v="a"><span class="pt" style="background:var(--ambar)"></span>Amarillo</button>
-      <button type="button" class="r ${R.dias[i]==='r'?'on':''}" data-v="r"><span class="pt" style="background:var(--rojo)"></span>Rojo</button></div></div>`).join('')}</div>
-    <p class="leyenda"><b>Verde</b>: 3/10 o menos, no sube mientras lo haces y al día siguiente igual o mejor. <b>Amarillo</b>: algo más cargado al día siguiente, se pasa en menos de 32 h. <b>Rojo</b>: pasa de 3, sube mientras lo haces o dura más de 32 h.</p>
-    <div class="msg">Marca todos los días (aunque sea con «—»).</div></div>
-
-  <div class="q" id="b_brote"><span class="l">¿Has tenido algún brote esta semana?</span>${chips('brote',['No','Sí'],R.brote)}<div class="msg">Elige una opción.</div></div>
-
-  <div class="q"><label class="l" for="fuera">¿Ha pasado algo fuera del programa?<span class="ayuda">Mucha carga en el trabajo, dormir mal, un viaje, un partido, estrés… Si ha salido algún rojo, cuéntamelo aquí.</span></label>
-    <textarea id="fuera">${esc(R.fuera)}</textarea></div>
-
-  <div class="q"><span class="l">¿Has usado las opciones extra?</span>${chips('extra',['No','La fácil ↓','La difícil ↑','Las dos'],R.extra)}
-    <input type="text" id="extra_cual" class="${R.extra&&R.extra!=='No'?'':'oculto'}" style="margin-top:8px" placeholder="¿En qué ejercicio? (su número)" value="${esc(R.extra_cual)}"></div>
-
-  <div class="q"><span class="l">¿Cuántos días has hecho tu pieza de la semana?<span class="ayuda">El hábito que te marqué en tu plantilla.</span></span>${escala('pieza',R.pieza,7)}</div>
-
-  <div class="q"><label class="l" for="comentario">¿Algo más que quieras contarme?</label><textarea id="comentario" placeholder="Cómo te has sentido, qué te ha costado, qué has notado…">${esc(R.comentario)}</textarea></div>
+  <div class="q" style="margin-top:22px"><label class="l" for="comentario">¿Algo más que quieras contarme?</label><textarea id="comentario" placeholder="Cómo te has sentido, qué te ha costado, qué has notado…">${esc(R.comentario)}</textarea></div>
 
   <div class="caja" id="ayudaEnvio"></div>`;
   enlazar(); pintarAyuda();
@@ -177,36 +228,46 @@ function pintarAyuda(){ const c=document.getElementById('ayudaEnvio'); if(!c) re
 }
 
 function enlazar(){
-  document.querySelectorAll('[data-esc]').forEach(el=>el.onclick=e=>{ const b=e.target.closest('button'); if(!b) return; const id=el.dataset.esc, v=+b.dataset.v;
-    if(id[0]==='p' && id.length===2) R.p[+id[1]]=v; else R[id]=v;
-    el.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); quitarErr(id[0]==='p'&&id.length===2?'p':id); guardarR(); });
-  document.querySelectorAll('[data-chip]').forEach(el=>el.onclick=e=>{ const b=e.target.closest('button'); if(!b) return; const id=el.dataset.chip, v=b.dataset.v;
-    if(id==='cual'){ R.cual = v==='La semana pasada'?'pasada':'esta'; R.lunes=iso(R.cual==='pasada'?S.pasada:S.esta); guardarR(); pintar(); return; }
-    R[id]=v; el.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); quitarErr(id);
-    if(id==='extra') document.getElementById('extra_cual').classList.toggle('oculto', v==='No'); guardarR(); });
-  document.querySelectorAll('[data-dia]').forEach(el=>el.onclick=e=>{ const b=e.target.closest('button'); if(!b) return; R.dias[+el.dataset.dia]=b.dataset.v;
-    el.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); if(R.dias.every(Boolean)) quitarErr('dias'); guardarR(); });
+  document.querySelectorAll('[data-semana]').forEach(b=>b.onclick=()=>{ const l=b.dataset.semana;
+    if (R.sel.includes(l)) { if(R.sel.length>1) R.sel=R.sel.filter(x=>x!==l); }
+    else { if(R.sel.length>=MAX_SEMANAS){ alert('Como mucho, dos semanas a la vez. Quita una para marcar otra.'); return; } R.sel.push(l); if(!R.w[l]) R.w[l]=nuevaSemana(); }
+    guardarR(); const y=window.scrollY; pintar(); window.scrollTo(0,y); });
+  document.querySelectorAll('section.bloque').forEach(sec=>{ const l=sec.dataset.sem, w=R.w[l];
+    sec.querySelectorAll('[data-esc]').forEach(el=>el.onclick=e=>{ const b=e.target.closest('button'); if(!b) return; const id=el.dataset.esc, v=+b.dataset.v;
+      if(/^p\d$/.test(id)) w.p[+id[1]]=v; else w[id]=v;
+      el.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); quitarErr((/^p\d$/.test(id)?'p':id)+'_'+l); guardarR(); });
+    sec.querySelectorAll('[data-chip]').forEach(el=>el.onclick=e=>{ const b=e.target.closest('button'); if(!b) return; const id=el.dataset.chip; w[id]=b.dataset.v;
+      el.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); quitarErr(id+'_'+l);
+      if(id==='extra') sec.querySelector('[data-txt="extra_cual"]').classList.toggle('oculto', w.extra==='No'); guardarR(); });
+    sec.querySelectorAll('[data-dia]').forEach(el=>el.onclick=e=>{ const b=e.target.closest('button'); if(!b||b.disabled) return; w.dias[+el.dataset.dia]=b.dataset.v;
+      el.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); if(w.dias.every(Boolean)) quitarErr('dias_'+l); guardarR(); });
+    sec.querySelectorAll('[data-txt]').forEach(el=>el.oninput=()=>{ w[el.dataset.txt]=el.value; guardarR(); });
+  });
   const t=(id,fn)=>{ const x=document.getElementById(id); if(x) x.oninput=()=>{ fn(x.value); guardar(); }; };
   t('nombre',v=>{G.nombre=v; quitarErr('nombre');});
-  [0,1,2].forEach(i=>t('act'+i,v=>{G.acts[i]=v;}));
-  t('fuera',v=>{R.fuera=v; G.borrador=R;}); t('extra_cual',v=>{R.extra_cual=v; G.borrador=R;}); t('comentario',v=>{R.comentario=v; G.borrador=R;});
+  [0,1,2].forEach(i=>t('act'+i,v=>{G.acts[i]=v; quitarErr('acts');
+    document.querySelectorAll('section.bloque').forEach(sec=>{ const s=sec.querySelectorAll('.act > .l')[i]; if(s) s.textContent=v.trim()||'Actividad '+(i+1); }); }));
+  t('comentario',v=>{R.comentario=v; G.borrador=R;});
 }
 function quitarErr(id){ const b=document.getElementById('b_'+id); if(b) b.classList.remove('err'); }
 function validar(){
   const mal=[];
   if(!G.nombre.trim()) mal.push('nombre');
-  if(G.acts.some(a=>!a.trim()) || R.p.some(v=>v==null)) mal.push('p');
-  if(R.medio==null) mal.push('medio'); if(R.peor==null) mal.push('peor');
-  if(R.dias.some(v=>!v)) mal.push('dias'); if(!R.brote) mal.push('brote');
+  if(!R.sel.length) mal.push('sel');
+  if(G.acts.some(a=>!a.trim())) mal.push('acts');
+  ordenadas().forEach(l=>{ const w=R.w[l];
+    if(w.p.some(v=>v==null)) mal.push('p_'+l);
+    if(w.medio==null) mal.push('medio_'+l); if(w.peor==null) mal.push('peor_'+l);
+    if(w.dias.some(v=>!v)) mal.push('dias_'+l); if(!w.brote) mal.push('brote_'+l); });
   document.querySelectorAll('.q.err').forEach(x=>x.classList.remove('err'));
   mal.forEach(id=>{ const b=document.getElementById('b_'+id); if(b) b.classList.add('err'); });
   if(mal.length){ document.getElementById('b_'+mal[0]).scrollIntoView({behavior:'smooth',block:'center'}); return false; }
   return true;
 }
 
-/* ===== Resumen de la semana (lo calcula la página; decide Victor) ===== */
-function resumenSemana(){
-  const hechos=R.dias.filter(d=>d&&d!=='no'), n=c=>hechos.filter(d=>d===c).length;
+/* ===== Resumen de cada semana (lo calcula la página; decide Victor) ===== */
+function resumenSemana(w){
+  const hechos=w.dias.filter(d=>d&&d!=='no'), n=c=>hechos.filter(d=>d===c).length;
   let txt; if(!hechos.length) txt='Sin sesiones marcadas';
   else if(n('r')) txt='Algún día en rojo';
   else if(n('a')) txt='Mezcla de verde y amarillo';
@@ -220,61 +281,66 @@ function crearPDF(){
   const W=210, M=16, ancho=W-2*M, AZUL=[58,122,196], NAVY=[14,38,82], GRIS=[91,107,130], LINEA=[217,227,240];
   const COL={v:[46,158,91], a:[224,162,27], r:[210,72,60]};
   const limpio = s => String(s==null?'':s).replace(/[“”„]/g,'"').replace(/[‘’]/g,"'").replace(/[–—]/g,'-').replace(/…/g,'...').replace(/ ?[↓↑]/g,'').replace(/[^\u0000-ÿ€·¿¡]/g,'');
-  const ahora=new Date(), lun=new Date(R.lunes+'T12:00:00'), sem=resumenSemana();
+  const ahora=new Date(), sems=ordenadas(), acts=G.acts.map(a=>a.trim());
   const fecha=ahora.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+ahora.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-
-  doc.setFillColor(...NAVY); doc.rect(0,0,W,32,'F');
-  doc.setTextColor(156,195,238); doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.text('VICTOR SANZ FISIO · LUMBAR DE ACERO',M,11);
-  doc.setTextColor(255,255,255); doc.setFontSize(18); doc.text('Registro semanal',M,20);
-  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.text(limpio(G.nombre.trim()+'   ·   Semana '+rango(lun)),M,27);
-  let y=42;
-  const titulo = t => { doc.setFont('helvetica','bold'); doc.setFontSize(11.5); doc.setTextColor(...AZUL); doc.text(limpio(t.toUpperCase()),M,y); y+=2; doc.setDrawColor(...LINEA); doc.line(M,y,W-M,y); y+=6; };
-  const barra = (etq, v, antes) => { // etiqueta, barra 0-10 y nota
+  const sub = sems.length>1 ? 'Semanas '+rango(sems[0]).replace('del ','del ').split(' al ')[0]+' al '+flarga(mas(deIso(sems[sems.length-1]),6)) : 'Semana '+rango(sems[0]);
+  let y;
+  const cabecera = () => { doc.setFillColor(...NAVY); doc.rect(0,0,W,32,'F');
+    doc.setTextColor(156,195,238); doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.text('VICTOR SANZ FISIO · LUMBAR DE ACERO',M,11);
+    doc.setTextColor(255,255,255); doc.setFontSize(18); doc.text(sems.length>1?'Registro de 2 semanas':'Registro semanal',M,20);
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.text(limpio(G.nombre.trim()+'   ·   '+sub),M,27); y=42; };
+  const titulo = t => { doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(...AZUL); doc.text(limpio(t.toUpperCase()),M,y); y+=2; doc.setDrawColor(...LINEA); doc.line(M,y,W-M,y); y+=6; };
+  const barra = (etq, v, antes) => {
     doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(...NAVY); doc.text(limpio(etq),M,y);
     const x0=M+78, bw=70; doc.setFillColor(...LINEA); doc.roundedRect(x0,y-3.6,bw,4.4,2.2,2.2,'F');
     if(v>0){ doc.setFillColor(...AZUL); doc.roundedRect(x0,y-3.6,bw*v/10,4.4,2.2,2.2,'F'); }
     doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.text(String(v),x0+bw+5,y+0.4);
-    if(antes!=null){ const d=v-antes; doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...GRIS); doc.text(limpio('antes '+antes+(d? (d>0?'  (+'+d+')':'  ('+d+')') :'  (=)')),x0+bw+12,y+0.2); }
-    y+=8; };
-
-  titulo('Tus 3 actividades (0 no puedo · 10 como antes)');
-  [0,1,2].forEach(i=>{ const mismo = U && U.acts && U.acts[i]===G.acts[i].trim(); barra(G.acts[i].trim(), R.p[i], mismo&&U.p? U.p[i] : null); });
-  y+=2; titulo('Dolor (0 nada · 10 el peor posible)');
-  barra('Dolor medio de la semana', R.medio, U?U.medio:null);
-  barra('Peor momento de la semana', R.peor, U?U.peor:null);
-
-  y+=2; titulo('La semana, día a día');
-  const cw=ancho/7;
-  DIAS.forEach((d,i)=>{ const cx=M+cw*i+cw/2, c=R.dias[i];
-    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...GRIS); doc.text(limpio(d),cx,y,{align:'center'});
-    if(c && c!=='no'){ doc.setFillColor(...COL[c]); doc.circle(cx,y+7,4.2,'F'); doc.setTextColor(255,255,255); doc.setFontSize(8); doc.text({v:'V',a:'A',r:'R'}[c],cx,y+8.2,{align:'center'}); }
-    else { doc.setDrawColor(...LINEA); doc.setLineWidth(0.5); doc.circle(cx,y+7,4.2,'S'); doc.setLineWidth(0.2); doc.setTextColor(...GRIS); doc.setFontSize(9); doc.text('-',cx,y+8.2,{align:'center'}); }
-  });
-  y+=18;
-  doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor(...NAVY);
-  doc.text(limpio(sem.txt+'   ·   '+sem.sesiones+' sesiones: '+sem.verde+' verde, '+sem.amarillo+' amarillo, '+sem.rojo+' rojo'),M,y); y+=9;
-
-  titulo('Lo demás');
+    if(antes!=null){ const d=v-antes; doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...GRIS); doc.text(limpio('antes '+antes+(d?(d>0?'  (+'+d+')':'  ('+d+')'):'  (=)')),x0+bw+12,y+0.2); }
+    y+=7.5; };
   const fila=(p,r)=>{ const pl=doc.setFont('helvetica','normal').setFontSize(9).splitTextToSize(limpio(p),ancho), rl=doc.setFont('helvetica','bold').setFontSize(10.5).splitTextToSize(limpio(r||'-'),ancho);
-    if(y+pl.length*4+rl.length*5>282){ doc.addPage(); y=18; }
+    if(y+pl.length*4+rl.length*5>282){ doc.addPage(); cabecera(); }
     doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...GRIS); doc.text(pl,M,y); y+=pl.length*4+0.5;
     doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor(...NAVY); doc.text(rl,M,y); y+=rl.length*5+3; };
-  fila('¿Algún brote esta semana?', R.brote);
-  fila('¿Algo fuera del programa?', R.fuera.trim());
-  fila('Opciones extra', (R.extra||'-')+(R.extra&&R.extra!=='No'&&R.extra_cual.trim()?' · ejercicio '+R.extra_cual.trim():''));
-  fila('Días con su pieza de la semana', R.pieza==null?'-':R.pieza+' de 7');
-  fila('Comentario', R.comentario.trim());
+
+  const registros=[];
+  sems.forEach((l,si)=>{
+    if(si>0) doc.addPage();
+    cabecera();
+    const w=R.w[l], U=previa(l), sem=resumenSemana(w);
+    doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(...NAVY); doc.text(limpio((sems.length>1?'Semana '+(si+1)+' de '+sems.length+' · ':'')+rango(l)),M,y); y+=9;
+    titulo('Tus 3 actividades (0 no puedo · 10 como antes)');
+    [0,1,2].forEach(i=>barra(acts[i], w.p[i], (U&&U.p&&U.acts&&U.acts[i]===acts[i])?U.p[i]:null));
+    y+=1.5; titulo('Dolor (0 nada · 10 el peor posible)');
+    barra('Dolor medio de la semana', w.medio, U?U.medio:null);
+    barra('Peor momento de la semana', w.peor, U?U.peor:null);
+    y+=1.5; titulo('La semana, día a día');
+    const cw=ancho/7;
+    DIAS.forEach((d,i)=>{ const cx=M+cw*i+cw/2, c=w.dias[i], f=mas(deIso(l),i);
+      doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...GRIS); doc.text(limpio(d+' '+f.getDate()),cx,y,{align:'center'});
+      if(c && c!=='no'){ doc.setFillColor(...COL[c]); doc.circle(cx,y+7,4.2,'F'); doc.setTextColor(255,255,255); doc.setFontSize(8); doc.text({v:'V',a:'A',r:'R'}[c],cx,y+8.2,{align:'center'}); }
+      else { doc.setDrawColor(...LINEA); doc.setLineWidth(0.5); doc.circle(cx,y+7,4.2,'S'); doc.setLineWidth(0.2); doc.setTextColor(...GRIS); doc.setFontSize(9); doc.text('-',cx,y+8.2,{align:'center'}); }
+    });
+    y+=18; doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor(...NAVY);
+    doc.text(limpio(sem.txt+'   ·   '+sem.sesiones+' sesiones: '+sem.verde+' verde, '+sem.amarillo+' amarillo, '+sem.rojo+' rojo'),M,y); y+=9;
+    titulo('Lo demás');
+    fila('¿Algún brote esa semana?', w.brote);
+    fila('¿Algo fuera del programa?', w.fuera.trim());
+    fila('Opciones extra', (w.extra||'-')+(w.extra&&w.extra!=='No'&&w.extra_cual.trim()?' · ejercicio '+w.extra_cual.trim():''));
+    fila('Días con su pieza de la semana', w.pieza==null?'-':w.pieza+' de 7');
+    if(si===sems.length-1) fila('Comentario', R.comentario.trim());
+    registros.push({lunes:l, acts, psfs:w.p, dolor_medio:w.medio, peor:w.peor, dias:w.dias, semana:sem, brote:w.brote, fuera:w.fuera.trim(), extra:w.extra, extra_cual:w.extra_cual.trim(), pieza:w.pieza, comentario:R.comentario.trim()});
+  });
 
   const n=doc.getNumberOfPages();
   for(let i=1;i<=n;i++){ doc.setPage(i); doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(138,151,171);
     doc.text(limpio('Enviado el '+fecha+' · Confidencial: contiene datos de salud. Solo para Victor Sanz Fisio.'),M,290); doc.text(i+' / '+n,W-M,290,{align:'right'}); }
 
   // Datos en bruto dentro del PDF, para que el cerebro los lea sin teclear nada
-  const datos={v:1, tipo:'registro_semanal', lunes:R.lunes, enviado:ahora.toISOString(), acts:G.acts.map(a=>a.trim()), psfs:R.p, dolor_medio:R.medio, peor:R.peor, dias:R.dias, semana:sem, brote:R.brote, fuera:R.fuera.trim(), extra:R.extra, extra_cual:R.extra_cual.trim(), pieza:R.pieza, comentario:R.comentario.trim()};
+  const datos={v:2, tipo:'registro_semanal', enviado:ahora.toISOString(), registros};
   doc.setProperties({title:'Registro semanal', subject:'VSF_REGISTRO '+JSON.stringify(datos).replace(/[\u007f-￿]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0')), creator:'Victor Sanz Fisio'});
 
   const base=G.nombre.trim().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'')||'paciente';
-  return {doc, nombre:`Registro_${base}_${R.lunes}.pdf`};
+  return {doc, nombre:`Registro_${base}_${sems.join('_y_')}.pdf`};
 }
 
 async function enviar(){
@@ -288,9 +354,9 @@ async function enviar(){
       try { await navigator.share({files:[file], title:'Mi registro semanal'}); ok=true; }
       catch(e){ if(e.name!=='AbortError'){ doc.save(nombre); ok=true; } }
     } else { doc.save(nombre); ok=true; }
-    if(ok){ // se guarda para comparar la semana que viene y se limpia el borrador
-      G.ultima={lunes:R.lunes, acts:G.acts.map(a=>a.trim()), p:R.p.slice(), medio:R.medio, peor:R.peor};
-      G.ultimaR=JSON.parse(JSON.stringify(R)); G.borrador=null; guardar(); enviado=true; window.scrollTo(0,0);
+    if(ok){ // se guarda cada semana para comparar la próxima vez y se limpia el borrador
+      ordenadas().forEach(l=>{ const w=R.w[l]; G.hist[l]={p:w.p.slice(), medio:w.medio, peor:w.peor, acts:G.acts.map(a=>a.trim())}; });
+      ultimoEnvio=JSON.parse(JSON.stringify(R)); G.borrador=null; guardar(); enviado=true; window.scrollTo(0,0);
     }
   } catch(e){ alert('No se ha podido crear el PDF. Prueba de nuevo o escríbeme por WhatsApp.'); }
   btn.disabled=false; pintar();
